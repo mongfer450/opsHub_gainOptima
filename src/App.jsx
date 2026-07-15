@@ -43,31 +43,41 @@ const sections = [
     id: "forms",
     label: "แบบฟอร์ม",
     icon: FileText,
-    items: [
+    groups: [
       {
-        label: "หลังกรอก_PT/MB/เบิกเงิน",
-        sub: "ข้อมูลดิบหลังปิดการขาย",
-        href: "https://docs.google.com/spreadsheets/d/1OXyNdqlLjvT1lvfE-uIZSTaVqaUoe6VfKUgaY6xDjc0/edit",
+        groupLabel: null,
+        items: [
+          {
+            label: "ฟอร์มสมัคร MB",
+            sub: "สมัครสมาชิก MB",
+            href: "https://docs.google.com/forms/d/e/1FAIpQLSdpAkyz7xEH185jI7OHEH19JIut2jWloa8dm44pIzGW0EgC6g/viewform",
+          },
+          {
+            label: "ฟอร์มสมัคร PT",
+            sub: "สมัครแพ็กเกจ PT",
+            href: "https://docs.google.com/forms/d/e/1FAIpQLSePqvl8De-2pAWmY61xVLQX-R0iRjUifkd_uBU18p9b5VKU3g/viewform",
+          },
+          {
+            label: "ฟอร์มเบิกเงิน",
+            sub: "แบบฟอร์มขอเบิกเงิน",
+            href: "https://docs.google.com/forms/d/e/1FAIpQLScxE2zxvT-EwHF1pKdNtKByBZk54ehqwNYMEbi_CFttiI9IFQ/viewform",
+          },
+        ],
       },
       {
-        label: "ฟอร์มสมัคร MB",
-        sub: "สมัครสมาชิก MB",
-        href: "https://docs.google.com/forms/d/e/1FAIpQLSdpAkyz7xEH185jI7OHEH19JIut2jWloa8dm44pIzGW0EgC6g/viewform",
-      },
-      {
-        label: "ฟอร์มสมัคร PT",
-        sub: "สมัครแพ็กเกจ PT",
-        href: "https://docs.google.com/forms/d/e/1FAIpQLSePqvl8De-2pAWmY61xVLQX-R0iRjUifkd_uBU18p9b5VKU3g/viewform",
-      },
-      {
-        label: "ฟอร์มเบิกเงิน",
-        sub: "แบบฟอร์มขอเบิกเงิน",
-        href: "https://docs.google.com/forms/d/e/1FAIpQLScxE2zxvT-EwHF1pKdNtKByBZk54ehqwNYMEbi_CFttiI9IFQ/viewform",
-      },
-      {
-        label: "รายการเบิกเงิน",
-        sub: "สรุปรายการเบิกเงินทั้งหมด",
-        href: "https://docs.google.com/spreadsheets/u/1/d/1VilTSeJGCDTw6mnEbZGVw9GPjbXwPNTKinElossaEPc/htmlview",
+        groupLabel: "หลังกรอกฟอร์ม",
+        items: [
+          {
+            label: "หลังกรอก_PT/MB/เบิกเงิน",
+            sub: "ข้อมูลดิบหลังปิดการขาย",
+            href: "https://docs.google.com/spreadsheets/d/1OXyNdqlLjvT1lvfE-uIZSTaVqaUoe6VfKUgaY6xDjc0/edit",
+          },
+          {
+            label: "รายการเบิกเงิน",
+            sub: "สรุปรายการเบิกเงินทั้งหมด",
+            href: "https://docs.google.com/spreadsheets/u/1/d/1VilTSeJGCDTw6mnEbZGVw9GPjbXwPNTKinElossaEPc/htmlview",
+          },
+        ],
       },
     ],
   },
