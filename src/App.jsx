@@ -168,30 +168,73 @@ function CategoryModal({ section, onClose }) {
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {section.items.map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="tap"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                textDecoration: "none",
-                color: "#111318",
-                background: "#FAFAFA",
-                border: "1px solid #EFEFEF",
-                borderRadius: 14,
-                padding: "14px 16px",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.label}</div>
-                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{item.sub}</div>
-              </div>
-              <ExternalLink size={15} color={GOLD_DARK} />
-            </a>
-          ))}
+          {section.groups
+            ? section.groups.map((group, gi) => (
+                <div key={group.groupLabel || `group-${gi}`} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  {group.groupLabel && (
+                    <div
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: GOLD_DARK,
+                        letterSpacing: "0.04em",
+                        marginTop: gi === 0 ? 0 : 6,
+                        marginBottom: -2,
+                      }}
+                    >
+                      {group.groupLabel.toUpperCase()}
+                    </div>
+                  )}
+                  {group.items.map((item) => (
+                    <a
+                      key={item.label}
+                      href={item.href}
+                      className="tap"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        textDecoration: "none",
+                        color: "#111318",
+                        background: "#FAFAFA",
+                        border: "1px solid #EFEFEF",
+                        borderRadius: 14,
+                        padding: "14px 16px",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.label}</div>
+                        <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{item.sub}</div>
+                      </div>
+                      <ExternalLink size={15} color={GOLD_DARK} />
+                    </a>
+                  ))}
+                </div>
+              ))
+            : section.items.map((item) => (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="tap"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    textDecoration: "none",
+                    color: "#111318",
+                    background: "#FAFAFA",
+                    border: "1px solid #EFEFEF",
+                    borderRadius: 14,
+                    padding: "14px 16px",
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>{item.sub}</div>
+                  </div>
+                  <ExternalLink size={15} color={GOLD_DARK} />
+                </a>
+              ))}
         </div>
       </div>
     </div>
@@ -342,7 +385,9 @@ export default function OpsHubGoldTheme() {
                 </div>
                 <div style={{ textAlign: "center" }}>
                   <div style={{ fontSize: 14.5, fontWeight: 700 }}>{section.label}</div>
-                  <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 3 }}>{section.items.length} ระบบ</div>
+                  <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 3 }}>
+                    {(section.items ? section.items.length : section.groups.reduce((sum, g) => sum + g.items.length, 0))} ระบบ
+                  </div>
                 </div>
               </button>
             );
