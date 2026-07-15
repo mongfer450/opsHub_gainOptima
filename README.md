@@ -1,46 +1,29 @@
-# Gain Optima — Ops Hub
+# Gain Optima — Owner Console
 
-หน้าเว็บ Ops Hub สำหรับ Gain Optima พร้อม deploy ขึ้น GitHub Pages
+เวอร์ชันสำหรับเจ้าของ/แอดมิน — หน้าแรกเป็นการ์ดหมวดหมู่ (ไอคอน+คำอธิบายสั้นๆ) กดเข้าไปแล้วเห็นการ์ดลิงก์แต่ละระบบในหมวดนั้น (ไอคอน+คำอธิบายสั้นๆ เหมือนกัน) มี real-time dashboard ยอดขายคลับ/ทีม PT ที่ header ด้วย
 
-## วิธี Deploy (ทำครั้งเดียว)
+## วิธี Deploy บน GitHub Pages
 
-### 1. สร้าง Repository บน GitHub
+### 1. สร้าง Repository ใหม่บน GitHub
 - ไปที่ https://github.com/new
-- ตั้งชื่อ repo เช่น `gain-optima-hub`
+- ตั้งชื่อ repo เช่น `gain-optima-owner-console`
 - เลือก Public
-- **ไม่ต้อง** ติ๊ก "Add README" (มีมาให้แล้ว)
+- ไม่ต้องติ๊ก "Add README"
 
 ### 2. อัปโหลดไฟล์ทั้งหมดในโฟลเดอร์นี้ขึ้น repo
-วิธีง่ายสุด (ไม่ต้องใช้คำสั่ง git):
-- เปิดหน้า repo ที่สร้างไว้ → กด **Add file → Upload files**
-- ลากไฟล์/โฟลเดอร์ทั้งหมดในนี้ (`package.json`, `vite.config.js`, `index.html`, `src/`, `.github/`) ใส่เข้าไป
+- เปิดหน้า repo → **Add file → Upload files**
+- ลากไฟล์/โฟลเดอร์ทั้งหมด (`package.json`, `vite.config.js`, `index.html`, `src/`, `.github/`) เข้าไป
+- **สำคัญ**: เช็คว่ามีไฟล์ `.github/workflows/deploy.yml` ติดขึ้นไปด้วย (โฟลเดอร์ที่ขึ้นต้นด้วยจุดมักถูกซ่อนตอนลากอัปโหลดจาก Mac) — ถ้าไม่มีให้สร้างเองผ่าน **Add file → Create new file** แล้วพิมพ์ path เต็มว่า `.github/workflows/deploy.yml`
 - กด Commit
-
-หรือถ้าถนัด command line:
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/<your-username>/gain-optima-hub.git
-git push -u origin main
-```
 
 ### 3. เปิดใช้งาน GitHub Pages
 - ไปที่ repo → **Settings → Pages**
-- หัวข้อ "Build and deployment" → Source เลือก **GitHub Actions**
-- (ไม่ต้องตั้งค่าอะไรเพิ่ม เพราะมีไฟล์ `.github/workflows/deploy.yml` เตรียมไว้ให้แล้ว)
+- Source เลือก **GitHub Actions**
 
-### 4. รอ 1-2 นาที
-- ไปที่แท็บ **Actions** ใน repo ดูสถานะการ build (จะขึ้นเครื่องหมายถูกเขียวเมื่อเสร็จ)
-- เสร็จแล้วเว็บจะอยู่ที่:
-  `https://<your-username>.github.io/gain-optima-hub/`
+### 4. รอ 1-2 นาที เช็คแท็บ Actions
+- ต้องขึ้นเครื่องหมายถูกเขียว ✅
+- เว็บจะขึ้นที่: `https://<your-username>.github.io/gain-optima-owner-console/`
 
-## วิธีแก้ไขเนื้อหาในอนาคต
-แก้ไฟล์ `src/App.jsx` แล้ว push ขึ้น GitHub อีกครั้ง (หรือแก้ผ่านหน้าเว็บ GitHub โดยตรงก็ได้ที่ปุ่มดินสอ) — GitHub Actions จะ build และอัปเดตเว็บให้อัตโนมัติทุกครั้งที่ push เข้า branch `main`
-
-## รันดูบนเครื่องตัวเอง (ไม่จำเป็นต้องทำ ถ้าจะ deploy อย่างเดียว)
-```bash
-npm install
-npm run dev
-```
+## หมายเหตุ
+- Real-time dashboard (ยอดขายคลับ/ทีม PT) ต้องให้ Sheet "Gain Optima — Revenue" แชร์เป็น **Anyone with the link — Viewer** ไม่งั้นจะขึ้น "—"
+- แก้ไฟล์ `src/App.jsx` แล้ว commit ใหม่ — GitHub Actions จะ build ให้อัตโนมัติ
