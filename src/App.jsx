@@ -116,9 +116,12 @@ async function gvizQuery(tq) {
 
 // ยอดขาย MB/PT แยกตามพนักงาน — จากแท็บ DATA (K=พนักงาน, I=ราคา, E=ประเภท)
 async function fetchEmployeeSales() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
   const [mbRows, ptRows] = await Promise.all([
-    gvizQuery("SELECT K, SUM(I) WHERE E = 'MB' GROUP BY K"),
-    gvizQuery("SELECT K, SUM(I) WHERE E = 'PT' GROUP BY K"),
+    gvizQuery(`SELECT K, SUM(I) WHERE E = 'MB' AND C = ${month} AND D = ${year} GROUP BY K`),
+    gvizQuery(`SELECT K, SUM(I) WHERE E = 'PT' AND C = ${month} AND D = ${year} GROUP BY K`),
   ]);
   const map = {};
   mbRows.forEach((r) => {
@@ -555,7 +558,7 @@ export default function OpsHubOwnerConsole() {
       {/* ยอดขายพนักงานแต่ละคน — real-time จาก Gain Optima Revenue > tab DATA */}
       <div className="wrap" style={{ marginTop: 20 }}>
         <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>
-          ยอดขายพนักงาน
+          ยอดขายพนักงาน — {THAI_MONTHS_SHORT[new Date().getMonth()]} {new Date().getFullYear() + 543}
         </div>
         <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
           {employeeSalesLoading ? (
