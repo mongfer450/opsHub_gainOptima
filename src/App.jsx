@@ -150,19 +150,19 @@ const categories = [
     icon: TrendingUp,
     items: [
       {
-        label: "Gain Optima — Revenue",
+        label: "Revenue Sheet",
         description: "ยอดวันนี้ + รายวันทั้งเดือน",
         icon: TrendingUp,
         href: "https://docs.google.com/spreadsheets/d/11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4/edit",
       },
       {
-        label: "คำนวณค่าคอม_PT",
+        label: "คำนวณค่าคอม",
         description: "คอมมิชชั่น PT ต่อลูกค้า",
         icon: TrendingUp,
         href: "https://docs.google.com/spreadsheets/d/1cI4VGPDGgv1vvqWy2Rrtv7fTbBygAi_l9eaAl78M8hs/edit",
       },
       {
-        label: "Expense Tracking",
+        label: "Expense Sheet",
         description: "เช็คลิสต์ค่าใช้จ่ายรายเดือน",
         icon: Wallet,
         href: "https://docs.google.com/spreadsheets/d/13QUTSOoUkpCxTcgVsKu9RMXyT4PQQ-MhlByaWQXxIcg/edit",
@@ -206,12 +206,6 @@ const categories = [
         description: "ข้อมูลดิบหลังปิดการขาย",
         icon: ClipboardList,
         href: "https://docs.google.com/spreadsheets/d/1OXyNdqlLjvT1lvfE-uIZSTaVqaUoe6VfKUgaY6xDjc0/edit",
-      },
-      {
-        label: "รายการเบิกเงิน",
-        description: "สรุปรายการเบิกเงินทั้งหมด",
-        icon: Receipt,
-        href: "https://docs.google.com/spreadsheets/u/1/d/1VilTSeJGCDTw6mnEbZGVw9GPjbXwPNTKinElossaEPc/htmlview",
       },
     ],
   },
