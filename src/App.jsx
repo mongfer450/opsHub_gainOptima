@@ -14,8 +14,8 @@ import {
   MessageCircle,
   Megaphone,
   Settings,
-  ExternalLink,
   ChevronLeft,
+  Target,
 } from "lucide-react";
 
 const GOLD = "#C9A227";
@@ -139,6 +139,43 @@ async function fetchEmployeeSales() {
     .sort((a, b) => b.mb + b.pt - (a.mb + a.pt));
 }
 
+// ยอดขาย MB/PT ของ "วันนี้" — จากแท็บ DATA เดียวกัน (คอลัมน์ B = วันที่)
+async function fetchTodaySales() {
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const rows = await gvizQuery(`SELECT E, SUM(I) WHERE B = date '${dateStr}' GROUP BY E`);
+  let mb = 0;
+  let pt = 0;
+  rows.forEach((r) => {
+    if (r.label === "MB") mb = r.value;
+    if (r.label === "PT") pt = r.value;
+  });
+  return { mb, pt, club: mb + pt };
+}
+
+// นับจำนวนลูกค้าที่ซื้อแพ็กเกจเดือนนี้ แยก New/Renew ต่อ MB และ PT
+// (คอลัมน์ L = ประเภทรายการ — PT เพิ่งเริ่มมีข้อมูลนี้ตั้งแต่แก้ script, ของเก่าก่อนหน้าจะว่าง/นับเป็น "อื่นๆ")
+async function fetchMemberPackages() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const [mbRows, ptRows] = await Promise.all([
+    gvizQuery(`SELECT L, COUNT(A) WHERE E = 'MB' AND C = ${month} AND D = ${year} GROUP BY L`),
+    gvizQuery(`SELECT L, COUNT(A) WHERE E = 'PT' AND C = ${month} AND D = ${year} GROUP BY L`),
+  ]);
+  const parse = (rows) => {
+    const out = { newCount: 0, renewCount: 0, otherCount: 0 };
+    rows.forEach((r) => {
+      const label = (r.label || "").trim().toLowerCase();
+      if (label === "new") out.newCount = r.value;
+      else if (label === "renew") out.renewCount = r.value;
+      else out.otherCount += r.value;
+    });
+    return out;
+  };
+  return { mb: parse(mbRows), pt: parse(ptRows) };
+}
+
 const GYMMO_LOGO =
   "data:image/png;base64,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";
 
@@ -150,19 +187,19 @@ const categories = [
     icon: TrendingUp,
     items: [
       {
-        label: "Revenue Sheet",
+        label: "Gain Optima — Revenue",
         description: "ยอดวันนี้ + รายวันทั้งเดือน",
         icon: TrendingUp,
         href: "https://docs.google.com/spreadsheets/d/11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4/edit",
       },
       {
-        label: "คำนวณค่าคอม",
+        label: "คำนวณค่าคอม_PT",
         description: "คอมมิชชั่น PT ต่อลูกค้า",
         icon: TrendingUp,
         href: "https://docs.google.com/spreadsheets/d/1cI4VGPDGgv1vvqWy2Rrtv7fTbBygAi_l9eaAl78M8hs/edit",
       },
       {
-        label: "Expense Sheet",
+        label: "Expense Tracking",
         description: "เช็คลิสต์ค่าใช้จ่ายรายเดือน",
         icon: Wallet,
         href: "https://docs.google.com/spreadsheets/d/13QUTSOoUkpCxTcgVsKu9RMXyT4PQQ-MhlByaWQXxIcg/edit",
@@ -206,6 +243,12 @@ const categories = [
         description: "ข้อมูลดิบหลังปิดการขาย",
         icon: ClipboardList,
         href: "https://docs.google.com/spreadsheets/d/1OXyNdqlLjvT1lvfE-uIZSTaVqaUoe6VfKUgaY6xDjc0/edit",
+      },
+      {
+        label: "รายการเบิกเงิน",
+        description: "สรุปรายการเบิกเงินทั้งหมด",
+        icon: Receipt,
+        href: "https://docs.google.com/spreadsheets/u/1/d/1VilTSeJGCDTw6mnEbZGVw9GPjbXwPNTKinElossaEPc/htmlview",
       },
     ],
   },
@@ -314,28 +357,50 @@ function IconCard({ icon: Icon, label, description, onClick, href }) {
 }
 
 export default function OpsHubOwnerConsole() {
-  const [clubSales, setClubSales] = useState(null);
-  const [ptSales, setPtSales] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState(null);
   const [attendanceToday, setAttendanceToday] = useState([]);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
   const [employeeSales, setEmployeeSales] = useState([]);
   const [employeeSalesLoading, setEmployeeSalesLoading] = useState(true);
+  const [showEmployeeDetail, setShowEmployeeDetail] = useState(false);
+  const [todaySales, setTodaySales] = useState({ mb: 0, pt: 0, club: 0 });
+  const [todaySalesLoading, setTodaySalesLoading] = useState(true);
+  const [memberPackages, setMemberPackages] = useState({
+    mb: { newCount: 0, renewCount: 0, otherCount: 0 },
+    pt: { newCount: 0, renewCount: 0, otherCount: 0 },
+  });
+  const [memberPackagesLoading, setMemberPackagesLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const [club, pt] = await Promise.all([fetchCell("A5"), fetchCell("C7")]);
-        if (!cancelled) {
-          setClubSales(club);
-          setPtSales(pt);
-        }
+        const result = await fetchTodaySales();
+        if (!cancelled) setTodaySales(result);
       } catch (e) {
-        console.error("โหลดยอดขาย real-time ไม่สำเร็จ", e);
+        console.error("โหลดยอดขายวันนี้ไม่สำเร็จ", e);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setTodaySalesLoading(false);
+      }
+    }
+    load();
+    const interval = setInterval(load, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const result = await fetchMemberPackages();
+        if (!cancelled) setMemberPackages(result);
+      } catch (e) {
+        console.error("โหลดข้อมูลสมาชิกซื้อแพ็กเกจไม่สำเร็จ", e);
+      } finally {
+        if (!cancelled) setMemberPackagesLoading(false);
       }
     }
     load();
@@ -403,51 +468,41 @@ export default function OpsHubOwnerConsole() {
         .tap:active { transform: scale(0.97); }
 
         .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
-        .headerInner { padding: 12px 0; display: flex; align-items: center; justify-content: center; flex-wrap: nowrap; gap: 24px; }
+        .headerInner { padding: 12px 0; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 10px; }
         .avatar { width: 32px; height: 32px; flex-shrink: 0; }
         .titleBrand { font-size: 10px; }
         .titleMain { font-size: 13px; }
         .sectionTitle { font-size: 14px; }
         .sectionIcon { width: 15px; height: 15px; }
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .attendanceGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .attendanceChip { display: flex; align-items: baseline; justify-content: center; gap: 5px; background: #FFFFFF; border: 1px solid #ECE9E1; border-radius: 10px; padding: 8px 6px; min-width: 0; }
         .iconCard { padding: 14px 8px 12px; }
         .iconCardIcon { width: 38px; height: 38px; }
-        .dashRow { display: flex; gap: 8px; flex-shrink: 1; min-width: 0; }
-        .dashCard { padding: 8px 12px; min-width: 0; }
-        .dashLabel { font-size: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .dashValue { font-size: 13px; white-space: nowrap; }
-        .labelFull { display: none; }
-        .labelShort { display: inline; }
-        .gymmoBanner { padding: 16px 18px; }
-        .gymmoLogo { width: 52px; height: 52px; }
 
         @media (min-width: 640px) {
           .avatar { width: 40px; height: 40px; }
           .titleBrand { font-size: 12px; }
           .titleMain { font-size: 16px; }
-          .dashCard { padding: 10px 14px; }
-          .dashLabel { font-size: 10px; }
-          .dashValue { font-size: 16px; }
-          .labelFull { display: inline; }
-          .labelShort { display: none; }
         }
 
         @media (min-width: 720px) {
-          .headerInner { padding: 16px 0; gap: 16px; justify-content: space-between; }
+          .headerInner { padding: 16px 0; gap: 16px; }
           .avatar { width: 42px; height: 42px; }
           .titleMain { font-size: 17px; }
           .sectionTitle { font-size: 17px; }
           .sectionIcon { width: 18px; height: 18px; }
           .grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
+          .attendanceGrid { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+          .attendanceChip { padding: 10px 8px; }
           .iconCard { padding: 26px 16px 20px; }
           .iconCardIcon { width: 56px; height: 56px; }
           .tap:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
           .wrap { padding: 0 40px; }
-          .dashCard { padding: 8px 16px; }
         }
       `}</style>
 
-      {/* Header (frozen) + Real-time dashboard */}
+      {/* Header (frozen) — โลโก้ซ้าย, Gymmo Console ขวา */}
       <div
         style={{
           position: "sticky",
@@ -458,7 +513,7 @@ export default function OpsHubOwnerConsole() {
           boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
         }}
       >
-        <div className="wrap headerInner">
+        <div className="wrap headerInner" style={{ justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
             <div
               className="avatar"
@@ -487,183 +542,338 @@ export default function OpsHubOwnerConsole() {
             </div>
           </div>
 
-          {/* Mini dashboard: ยอดขายคลับ + ยอดขายทีม PT — อยู่แถวเดียวกับหัวข้อ ไม่ตัดบรรทัด */}
-          <div className="dashRow">
-            <div className="dashCard tap" style={{ background: "#FFFFFF14", border: "1px solid #FFFFFF2A", borderRadius: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ADE80", flexShrink: 0 }} />
-                <span className="dashLabel" style={{ color: "#EFE2BC", letterSpacing: "0.01em" }}>
-                  <span className="labelShort">คลับ</span>
-                  <span className="labelFull">ยอดขายคลับ · REAL-TIME</span>
-                </span>
-              </div>
-              <div className="dashValue" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#FFFFFF" }}>
-                {loading ? "…" : fmtBaht(clubSales)}
-              </div>
+          <a
+            href="https://console.gymmo.app/th"
+            className="tap"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              textDecoration: "none",
+              background: "#FFFFFF",
+              borderRadius: 20,
+              padding: "4px 12px 4px 4px",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                background: "#FFFFFF",
+                border: "1px solid #ECE9E1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+                overflow: "hidden",
+                padding: 2,
+              }}
+            >
+              <img src={GYMMO_LOGO} alt="Gymmo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
             </div>
-            <div className="dashCard tap" style={{ background: "#FFFFFF14", border: "1px solid #FFFFFF2A", borderRadius: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#4ADE80", flexShrink: 0 }} />
-                <span className="dashLabel" style={{ color: "#EFE2BC", letterSpacing: "0.01em" }}>
-                  <span className="labelShort">ทีม PT</span>
-                  <span className="labelFull">ยอดขายทีม PT · REAL-TIME</span>
-                </span>
-              </div>
-              <div className="dashValue" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#FFFFFF" }}>
-                {loading ? "…" : fmtBaht(ptSales)}
-              </div>
-            </div>
-          </div>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>Gymmo Console</span>
+          </a>
         </div>
       </div>
 
-      {/* การเข้างานวันนี้ — อยู่ใต้ nav เสมอ ไม่ว่าจะเปิดหมวดไหนอยู่ */}
+      {/* ยอดขาย — เดือนนี้ (หลัก) + วันนี้ (รอง) ต่อการ์ด + รายละเอียดรายคน */}
+      <div className="wrap" style={{ marginTop: 20 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
+          <div className="sectionTitle" style={{ fontWeight: 700 }}>ยอดขาย</div>
+          <div style={{ fontSize: 10, color: "#9CA3AF" }}>เดือนนี้ / วันนี้</div>
+        </div>
+
+        {employeeSalesLoading ? (
+          <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
+            กำลังโหลด…
+          </div>
+        ) : (
+          <>
+            {(() => {
+              const totalMB = employeeSales.reduce((sum, r) => sum + (r.mb || 0), 0);
+              const totalPT = employeeSales.reduce((sum, r) => sum + (r.pt || 0), 0);
+              const totalClub = totalMB + totalPT;
+              const summaryCards = [
+                { label: "คลับรวม", month: totalClub, today: todaySales.club },
+                { label: "MB", month: totalMB, today: todaySales.mb },
+                { label: "PT", month: totalPT, today: todaySales.pt },
+              ];
+              return (
+                <div className="grid" style={{ marginBottom: 12 }}>
+                  {summaryCards.map((c) => (
+                    <div
+                      key={c.label}
+                      style={{
+                        background: "#FFFFFF",
+                        border: "1px solid #ECE9E1",
+                        borderRadius: 16,
+                        padding: "14px 12px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <div style={{ fontSize: 10, color: "#9CA3AF", marginBottom: 6 }}>{c.label}</div>
+                      <div
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 700,
+                          fontFamily: "'Space Grotesk', sans-serif",
+                          color: GOLD_DARK,
+                        }}
+                      >
+                        {fmtBaht(c.month)}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: c.today > 0 ? "#16A34A" : "#9CA3AF",
+                          marginTop: 8,
+                          paddingTop: 8,
+                          borderTop: "1px solid #F0EEE8",
+                        }}
+                      >
+                        {todaySalesLoading ? "…" : fmtBaht(c.today)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            <button
+              onClick={() => setShowEmployeeDetail((v) => !v)}
+              className="tap"
+              style={{
+                width: "100%",
+                background: "#FFFFFF",
+                border: "1px solid #ECE9E1",
+                borderRadius: 14,
+                padding: "10px 16px",
+                fontSize: 12.5,
+                fontWeight: 600,
+                color: GOLD_DARK,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+            >
+              {showEmployeeDetail ? "ซ่อนรายละเอียดพนักงาน ▲" : "ดูรายละเอียดพนักงาน ▼"}
+            </button>
+
+            {showEmployeeDetail && (
+              <div style={{ marginTop: 10, background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
+                {employeeSales.length === 0 ? (
+                  <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>ยังไม่มีข้อมูลยอดขาย</div>
+                ) : (
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        padding: "8px 16px",
+                        background: "#FAFAF8",
+                        fontSize: 10.5,
+                        color: "#9CA3AF",
+                        fontWeight: 600,
+                      }}
+                    >
+                      <span style={{ flex: 1 }}>พนักงาน</span>
+                      <span style={{ width: 90, textAlign: "right" }}>MB</span>
+                      <span style={{ width: 90, textAlign: "right" }}>PT</span>
+                    </div>
+                    {employeeSales.map((row) => (
+                      <div
+                        key={row.name}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          padding: "10px 16px",
+                          borderTop: "1px solid #F0EEE8",
+                        }}
+                      >
+                        <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{row.name}</span>
+                        <span
+                          style={{
+                            width: 90,
+                            textAlign: "right",
+                            fontSize: 12,
+                            color: "#111318",
+                            fontFamily: "'Space Grotesk', sans-serif",
+                          }}
+                        >
+                          {fmtBaht(row.mb)}
+                        </span>
+                        <span
+                          style={{
+                            width: 90,
+                            textAlign: "right",
+                            fontSize: 12,
+                            color: "#111318",
+                            fontFamily: "'Space Grotesk', sans-serif",
+                          }}
+                        >
+                          {fmtBaht(row.pt)}
+                        </span>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* เป้าหมายเดือนนี้ — ยอดขายรวม + เป้า PT (เป้าหมายตั้งค่าไว้คงที่ ปรับตัวเลขได้ตามจริง) */}
+      <div className="wrap" style={{ marginTop: 20 }}>
+        <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>เป้าหมายเดือนนี้</div>
+        {employeeSalesLoading ? (
+          <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
+            กำลังโหลด…
+          </div>
+        ) : (
+          (() => {
+            const totalMB = employeeSales.reduce((sum, r) => sum + (r.mb || 0), 0);
+            const totalPT = employeeSales.reduce((sum, r) => sum + (r.pt || 0), 0);
+            const totalClub = totalMB + totalPT;
+            const CLUB_TARGET = 1000000;
+            const PT_TARGET = 480000;
+            const clubPct = Math.min(100, Math.round((totalClub / CLUB_TARGET) * 100));
+            const ptPct = Math.min(100, Math.round((totalPT / PT_TARGET) * 100));
+            return (
+              <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, padding: "16px 18px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Target size={14} color={GOLD_DARK} />
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }}>ยอดขายรวม</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+                    <b style={{ color: GOLD_DARK, fontFamily: "'Space Grotesk', sans-serif" }}>{fmtBaht(totalClub)}</b> / {fmtBaht(CLUB_TARGET)}
+                  </span>
+                </div>
+                <div style={{ height: 10, background: "#F0EEE8", borderRadius: 6, overflow: "hidden" }}>
+                  <div style={{ width: `${clubPct}%`, height: "100%", background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD})`, borderRadius: 6 }} />
+                </div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 6 }}>
+                  ทำได้แล้ว {clubPct}% ของเป้า · เหลืออีก {fmtBaht(Math.max(0, CLUB_TARGET - totalClub))}
+                </div>
+
+                <div style={{ height: 1, background: "#F0EEE8", margin: "16px 0" }} />
+
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <Target size={14} color={GOLD_DARK} />
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }}>เป้าหมาย PT</span>
+                  </div>
+                  <span style={{ fontSize: 12, color: "#9CA3AF" }}>
+                    <b style={{ color: GOLD_DARK, fontFamily: "'Space Grotesk', sans-serif" }}>{fmtBaht(totalPT)}</b> / {fmtBaht(PT_TARGET)}
+                  </span>
+                </div>
+                <div style={{ height: 10, background: "#F0EEE8", borderRadius: 6, overflow: "hidden" }}>
+                  <div style={{ width: `${ptPct}%`, height: "100%", background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD})`, borderRadius: 6 }} />
+                </div>
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 6 }}>
+                  ทำได้แล้ว {ptPct}% ของเป้า PT · เหลืออีก {fmtBaht(Math.max(0, PT_TARGET - totalPT))}
+                </div>
+              </div>
+            );
+          })()
+        )}
+      </div>
+
+      {/* สมาชิกซื้อแพ็กเกจเดือนนี้ — แยก New/Renew ต่อ MB และ PT (real-time จาก DATA tab) */}
+      <div className="wrap" style={{ marginTop: 20 }}>
+        <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>สมาชิกซื้อแพ็กเกจเดือนนี้</div>
+        {memberPackagesLoading ? (
+          <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
+            กำลังโหลด…
+          </div>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, padding: "14px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 8, background: `${GOLD}1A`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <UserPlus size={13} color={GOLD_DARK} />
+                  </div>
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>MB</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>สมัครใหม่</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#16A34A" }}>
+                    {memberPackages.mb.newCount}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>ต่ออายุ</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
+                    {memberPackages.mb.renewCount}
+                  </span>
+                </div>
+              </div>
+              <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, padding: "14px 12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                  <div style={{ width: 26, height: 26, borderRadius: 8, background: `${GOLD}1A`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Dumbbell size={13} color={GOLD_DARK} />
+                  </div>
+                  <span style={{ fontSize: 12.5, fontWeight: 700 }}>PT</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>สมัครใหม่</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#16A34A" }}>
+                    {memberPackages.pt.newCount}
+                  </span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 11, color: "#9CA3AF" }}>ต่ออายุ</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>
+                    {memberPackages.pt.renewCount}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {memberPackages.pt.otherCount > 0 && (
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>
+                * PT มี {memberPackages.pt.otherCount} รายการที่ยังไม่ระบุ New/Renew (ข้อมูลเก่าก่อนแก้ script) — ตัวเลขด้านบนอาจไม่ครบ
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* การเข้างานวันนี้ — อยู่ใต้เป้าหมายเดือนนี้ */}
       <div className="wrap" style={{ marginTop: 20 }}>
         <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>
           การเข้างานวันที่ {fmtThaiDate(new Date())}
         </div>
-        <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
-          {attendanceLoading ? (
-            <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>กำลังโหลด…</div>
-          ) : attendanceToday.length === 0 ? (
-            <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>ยังไม่มีใครเช็คอินวันนี้</div>
-          ) : (
-            attendanceToday.map((row, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 16px",
-                  borderTop: i === 0 ? "none" : "1px solid #F0EEE8",
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 600 }}>{row.name}</span>
-                <span style={{ fontSize: 12, color: "#9CA3AF", fontFamily: "'Space Grotesk', sans-serif" }}>
+        {attendanceLoading ? (
+          <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
+            กำลังโหลด…
+          </div>
+        ) : attendanceToday.length === 0 ? (
+          <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
+            ยังไม่มีใครเช็คอินวันนี้
+          </div>
+        ) : (
+          <div className="attendanceGrid">
+            {attendanceToday.map((row, i) => (
+              <div key={i} className="attendanceChip">
+                <span style={{ fontSize: 12.5, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {row.name}
+                </span>
+                <span style={{ fontSize: 11, color: "#9CA3AF", fontFamily: "'Space Grotesk', sans-serif", flexShrink: 0 }}>
                   {fmtTime(row.date)}
                 </span>
               </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* ยอดขายพนักงานแต่ละคน — real-time จาก Gain Optima Revenue > tab DATA */}
-      <div className="wrap" style={{ marginTop: 20 }}>
-        <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>
-          ยอดขายพนักงาน — {THAI_MONTHS_SHORT[new Date().getMonth()]} {new Date().getFullYear() + 543}
-        </div>
-        <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
-          {employeeSalesLoading ? (
-            <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>กำลังโหลด…</div>
-          ) : employeeSales.length === 0 ? (
-            <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>ยังไม่มีข้อมูลยอดขาย</div>
-          ) : (
-            <>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  padding: "8px 16px",
-                  background: "#FAFAF8",
-                  fontSize: 10.5,
-                  color: "#9CA3AF",
-                  fontWeight: 600,
-                }}
-              >
-                <span style={{ flex: 1 }}>พนักงาน</span>
-                <span style={{ width: 90, textAlign: "right" }}>MB</span>
-                <span style={{ width: 90, textAlign: "right" }}>PT</span>
-              </div>
-              {employeeSales.map((row, i) => (
-                <div
-                  key={row.name}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    padding: "10px 16px",
-                    borderTop: "1px solid #F0EEE8",
-                  }}
-                >
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{row.name}</span>
-                  <span
-                    style={{
-                      width: 90,
-                      textAlign: "right",
-                      fontSize: 12,
-                      color: "#111318",
-                      fontFamily: "'Space Grotesk', sans-serif",
-                    }}
-                  >
-                    {fmtBaht(row.mb)}
-                  </span>
-                  <span
-                    style={{
-                      width: 90,
-                      textAlign: "right",
-                      fontSize: 12,
-                      color: "#111318",
-                      fontFamily: "'Space Grotesk', sans-serif",
-                    }}
-                  >
-                    {fmtBaht(row.pt)}
-                  </span>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="wrap">
         {activeCategory === null ? (
           <>
-            {/* Featured: Gymmo Console — ลิงก์เดียว กดครั้งเดียวเข้าเลย */}
-            <div style={{ marginTop: 24 }}>
-              <a
-                href="https://console.gymmo.app/th"
-                className="tap gymmoBanner"
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  textDecoration: "none",
-                  color: "#111318",
-                  background: "#FFFFFF",
-                  border: `1px solid ${GOLD}55`,
-                  borderRadius: 20,
-                  boxShadow: "0 4px 14px rgba(201,162,39,0.15)",
-                  maxWidth: 460,
-                }}
-              >
-                <div
-                  className="gymmoLogo"
-                  style={{
-                    borderRadius: 14,
-                    background: "#FFFFFF",
-                    border: "1px solid #ECE9E1",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
-                    overflow: "hidden",
-                    padding: 4,
-                  }}
-                >
-                  <img src={GYMMO_LOGO} alt="Gymmo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 11, color: GOLD_DARK, fontWeight: 700, letterSpacing: "0.03em" }}>
-                    FITNESS MANAGEMENT
-                  </div>
-                  <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>Gymmo Console</div>
-                  <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>สมาชิก · ธุรกรรม · บิลลิ่ง</div>
-                </div>
-                <ExternalLink size={16} color={GOLD_DARK} />
-              </a>
-            </div>
-
             {/* หน้าแรก: การ์ดหมวดหมู่ — ไอคอน + ชื่อ + คำอธิบายสั้นๆ */}
             <div style={{ marginTop: 32 }}>
               <div className="grid">
