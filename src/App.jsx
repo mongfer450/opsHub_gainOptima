@@ -153,6 +153,22 @@ async function fetchTodaySales() {
   return { mb, pt, club: mb + pt };
 }
 
+// ยอดขาย MB/PT ของ "เดือนนี้" — รวมตรงจากคอลัมน์ E (ประเภท) เท่านั้น
+// ไม่ผูกกับคอลัมน์ K (พนักงาน) เพราะแถว MB ทุกแถวยังไม่มีค่าในคอลัมน์นี้ (บั๊กฝั่ง Apps Script ที่ยังไม่ได้แก้)
+async function fetchMonthSales() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const year = now.getFullYear();
+  const rows = await gvizQuery(`SELECT E, SUM(I) WHERE C = ${month} AND D = ${year} GROUP BY E`);
+  let mb = 0;
+  let pt = 0;
+  rows.forEach((r) => {
+    if (r.label === "MB") mb = r.value;
+    if (r.label === "PT") pt = r.value;
+  });
+  return { mb, pt, club: mb + pt };
+}
+
 // นับจำนวนลูกค้าที่ซื้อแพ็กเกจเดือนนี้ แยก New/Renew ต่อ MB และ PT
 // (คอลัมน์ L = ประเภทรายการ — PT เพิ่งเริ่มมีข้อมูลนี้ตั้งแต่แก้ script, ของเก่าก่อนหน้าจะว่าง/นับเป็น "อื่นๆ")
 async function fetchMemberPackages() {
@@ -365,6 +381,8 @@ export default function OpsHubOwnerConsole() {
   const [showEmployeeDetail, setShowEmployeeDetail] = useState(false);
   const [todaySales, setTodaySales] = useState({ mb: 0, pt: 0, club: 0 });
   const [todaySalesLoading, setTodaySalesLoading] = useState(true);
+  const [monthSales, setMonthSales] = useState({ mb: 0, pt: 0, club: 0 });
+  const [monthSalesLoading, setMonthSalesLoading] = useState(true);
   const [memberPackages, setMemberPackages] = useState({
     mb: { newCount: 0, renewCount: 0, otherCount: 0 },
     pt: { newCount: 0, renewCount: 0, otherCount: 0 },
@@ -381,6 +399,26 @@ export default function OpsHubOwnerConsole() {
         console.error("โหลดยอดขายวันนี้ไม่สำเร็จ", e);
       } finally {
         if (!cancelled) setTodaySalesLoading(false);
+      }
+    }
+    load();
+    const interval = setInterval(load, 60000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const result = await fetchMonthSales();
+        if (!cancelled) setMonthSales(result);
+      } catch (e) {
+        console.error("โหลดยอดขายเดือนนี้ไม่สำเร็จ", e);
+      } finally {
+        if (!cancelled) setMonthSalesLoading(false);
       }
     }
     load();
@@ -585,20 +623,17 @@ export default function OpsHubOwnerConsole() {
           <div style={{ fontSize: 10, color: "#9CA3AF" }}>เดือนนี้ / วันนี้</div>
         </div>
 
-        {employeeSalesLoading ? (
+        {monthSalesLoading ? (
           <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
             กำลังโหลด…
           </div>
         ) : (
           <>
             {(() => {
-              const totalMB = employeeSales.reduce((sum, r) => sum + (r.mb || 0), 0);
-              const totalPT = employeeSales.reduce((sum, r) => sum + (r.pt || 0), 0);
-              const totalClub = totalMB + totalPT;
               const summaryCards = [
-                { label: "คลับรวม", month: totalClub, today: todaySales.club },
-                { label: "MB", month: totalMB, today: todaySales.mb },
-                { label: "PT", month: totalPT, today: todaySales.pt },
+                { label: "คลับรวม", month: monthSales.club, today: todaySales.club },
+                { label: "MB", month: monthSales.mb, today: todaySales.mb },
+                { label: "PT", month: monthSales.pt, today: todaySales.pt },
               ];
               return (
                 <div className="grid" style={{ marginBottom: 12 }}>
@@ -660,6 +695,11 @@ export default function OpsHubOwnerConsole() {
             >
               {showEmployeeDetail ? "ซ่อนรายละเอียดพนักงาน ▲" : "ดูรายละเอียดพนักงาน ▼"}
             </button>
+            {showEmployeeDetail && (
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 6 }}>
+                * ยอด MB รายบุคคลยังไม่ครบ เพราะฟอร์ม MB ยังไม่ได้ส่งชื่อพนักงานไปที่ Sheet (ต้องแก้ Apps Script) — ยอดรวม MB ด้านบนถูกต้อง แต่ตารางด้านล่างนี้จะเห็นแค่ยอด PT รายคน
+              </div>
+            )}
 
             {showEmployeeDetail && (
               <div style={{ marginTop: 10, background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
@@ -728,15 +768,14 @@ export default function OpsHubOwnerConsole() {
       {/* เป้าหมายเดือนนี้ — ยอดขายรวม + เป้า PT (เป้าหมายตั้งค่าไว้คงที่ ปรับตัวเลขได้ตามจริง) */}
       <div className="wrap" style={{ marginTop: 20 }}>
         <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>เป้าหมายเดือนนี้</div>
-        {employeeSalesLoading ? (
+        {monthSalesLoading ? (
           <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
             กำลังโหลด…
           </div>
         ) : (
           (() => {
-            const totalMB = employeeSales.reduce((sum, r) => sum + (r.mb || 0), 0);
-            const totalPT = employeeSales.reduce((sum, r) => sum + (r.pt || 0), 0);
-            const totalClub = totalMB + totalPT;
+            const totalClub = monthSales.club;
+            const totalPT = monthSales.pt;
             const CLUB_TARGET = 1000000;
             const PT_TARGET = 480000;
             const clubPct = Math.min(100, Math.round((totalClub / CLUB_TARGET) * 100));
@@ -833,8 +872,13 @@ export default function OpsHubOwnerConsole() {
                 </div>
               </div>
             </div>
-            {memberPackages.pt.otherCount > 0 && (
+            {memberPackages.mb.otherCount > 0 && (
               <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>
+                * MB มี {memberPackages.mb.otherCount} รายการที่ยังไม่ระบุ New/Renew (ฟอร์ม MB ยังไม่มีฟิลด์นี้ หรือยังไม่ได้ส่งไป Sheet) — ตัวเลขด้านบนอาจไม่ครบ
+              </div>
+            )}
+            {memberPackages.pt.otherCount > 0 && (
+              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
                 * PT มี {memberPackages.pt.otherCount} รายการที่ยังไม่ระบุ New/Renew (ข้อมูลเก่าก่อนแก้ script) — ตัวเลขด้านบนอาจไม่ครบ
               </div>
             )}
