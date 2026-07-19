@@ -16,6 +16,8 @@ import {
   Settings,
   ChevronLeft,
   Target,
+  Tag,
+  Image,
 } from "lucide-react";
 
 const GOLD = "#C9A227";
@@ -325,6 +327,18 @@ const categories = [
         description: "จัดการเพจและบัญชีธุรกิจ",
         icon: Settings,
         href: "https://business.facebook.com/latest/home?global_scope_id=1392220475703771&business_id=1392220475703771&page_id=949179078279202&asset_id=949179078279202&redirect_session_id=3dd36a3d-4e15-4300-8817-028568037edd",
+      },
+      {
+        label: "ราคาแพคเกจ/โปรโมชั่น",
+        description: "ดูราคาและโปรโมชั่นล่าสุด",
+        icon: Tag,
+        href: "https://canva.link/mdl0phvv8gblmcy",
+      },
+      {
+        label: "คลัง Media",
+        description: "ส่งงานคอนเทนต์ / ใช้ทำการตลาด",
+        icon: Image,
+        href: "https://drive.google.com/drive/folders/1eHAvUBqEpAz5QBnoBJ1XGnCxbBXZIhfs?usp=share_link",
       },
     ],
   },
