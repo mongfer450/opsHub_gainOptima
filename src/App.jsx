@@ -147,7 +147,7 @@ async function fetchEmployeeSales() {
   });
   return Object.entries(map)
     .map(([name, v]) => ({ name, mb: v.mb, pt: v.pt }))
-    .sort((a, b) => b.mb + b.pt - (a.mb + a.pt));
+    .sort((a, b) => b.pt - a.pt);
 }
 
 // ยอดขาย MB/PT ของ "วันนี้" — จากแท็บ DATA เดียวกัน (คอลัมน์ B = วันที่)
@@ -1487,7 +1487,7 @@ export default function OpsHubOwnerConsole() {
                             {row.name}
                           </div>
                           <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 1 }}>
-                            MB {fmtBaht(row.mb)} · PT {fmtBaht(row.pt)}
+                            MB {fmtBaht(row.mb)} · รวม {fmtBaht(total)}
                           </div>
                         </div>
                         <span
@@ -1499,7 +1499,7 @@ export default function OpsHubOwnerConsole() {
                             flexShrink: 0,
                           }}
                         >
-                          {fmtBaht(total)}
+                          {fmtBaht(row.pt)}
                         </span>
                       </div>
                     );
