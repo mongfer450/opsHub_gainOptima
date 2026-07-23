@@ -26,11 +26,19 @@ import {
   Filter,
   Pencil,
   X,
+  Lock,
+  LogOut,
   Check,
 } from "lucide-react";
 
 const GOLD = "#C9A227";
 const GOLD_DARK = "#7A5E12";
+
+// รหัสผ่านเข้าใช้งาน — เป็นแค่ตัวกันคนทั่วไปเปิดผ่านๆ เท่านั้น
+// (ฝังอยู่ใน JS ที่ browser โหลดมา ใครเปิด view-source/network tab ก็เห็นได้ ไม่ใช่ความปลอดภัยจริงจัง
+//  ถ้าต้องการปลอดภัยจริง แนะนำ Cloudflare Access แทน)
+const OWNER_PASSWORD = "gainoptima2026";
+const OWNER_AUTH_KEY = "gainoptima_owner_auth";
 
 const REVENUE_SHEET_ID = "11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4";
 const ATTENDANCE_SHEET_ID = "1xH5kKeXAqNaEZzheWAFZEKdQHbsMi55AipuoTkn_PoY";
@@ -568,7 +576,7 @@ function AssigneeMultiPicker({ value, onChange, employees }) {
   );
 }
 
-function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, employees }) {
+function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete, employees }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState({ title: task.title, category: task.category, dueDate: task.dueDate });
   const overdue = isTaskOverdue(task.dueDate, task.status);
@@ -608,6 +616,12 @@ function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, employees 
           style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: isEditing ? GOLD_DARK : "#D1D5DB", flexShrink: 0, borderRadius: 6 }}
         >
           {isEditing ? <Check size={16} /> : <Pencil size={14} />}
+        </button>
+        <button
+          onClick={() => onDelete(task.taskId)}
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "#D1D5DB", flexShrink: 0, borderRadius: 6 }}
+        >
+          <X size={15} />
         </button>
       </div>
 
@@ -729,6 +743,12 @@ function TaskTrackerPage({ onBack }) {
   const handleUpdateTask = (taskId, updates) => {
     // ของจริง: fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'update', taskId, ...updates }) })
     setTasks(tasks.map((t) => (t.taskId === taskId ? { ...t, ...updates } : t)));
+  };
+
+  const handleDelete = (taskId) => {
+    // ของจริง: fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', taskId }) })
+    if (!window.confirm("ลบงานนี้เลยไหม?")) return;
+    setTasks(tasks.filter((t) => t.taskId !== taskId));
   };
 
   const toggleNewAssignee = (name) => {
@@ -1067,6 +1087,7 @@ function TaskTrackerPage({ onBack }) {
                       onStatusChange={handleStatusChange}
                       onAssigneeChange={handleAssigneeChange}
                       onUpdate={handleUpdateTask}
+                      onDelete={handleDelete}
                       employees={employees}
                     />
                   ))
@@ -1083,7 +1104,108 @@ function TaskTrackerPage({ onBack }) {
   );
 }
 
+// หน้าด่านรหัสผ่าน — เข้าไม่ได้จนกว่าจะกรอกรหัสถูก
+function LoginGate({ onUnlock }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (password === OWNER_PASSWORD) {
+      localStorage.setItem(OWNER_AUTH_KEY, "true");
+      onUnlock();
+    } else {
+      setError(true);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#F7F6F3",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+        fontFamily: "'Inter','Noto Sans Thai',sans-serif",
+      }}
+    >
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');`}</style>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          width: "100%",
+          maxWidth: 340,
+          background: "#FFFFFF",
+          border: "1px solid #ECE9E1",
+          borderRadius: 20,
+          padding: "32px 28px",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: `linear-gradient(120deg, #1A1712 0%, ${GOLD_DARK} 55%, ${GOLD} 100%)`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 16px",
+          }}
+        >
+          <Lock size={22} color="#FFFFFF" />
+        </div>
+        <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, fontSize: 17, marginBottom: 4 }}>Owner Console</div>
+        <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 20 }}>กรอกรหัสผ่านเพื่อเข้าใช้งาน</div>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setError(false);
+          }}
+          autoFocus
+          placeholder="รหัสผ่าน"
+          style={{
+            width: "100%",
+            fontSize: 14,
+            padding: "12px 14px",
+            border: `1px solid ${error ? "#DC2626" : "#ECE9E1"}`,
+            borderRadius: 12,
+            outline: "none",
+            fontFamily: "inherit",
+            textAlign: "center",
+            marginBottom: error ? 8 : 16,
+          }}
+        />
+        {error && <div style={{ fontSize: 11.5, color: "#DC2626", marginBottom: 12 }}>รหัสผ่านไม่ถูกต้อง</div>}
+        <button
+          type="submit"
+          style={{
+            width: "100%",
+            background: GOLD_DARK,
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: 12,
+            padding: "12px 0",
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          เข้าสู่ระบบ
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function OpsHubOwnerConsole() {
+  const [unlocked, setUnlocked] = useState(() => localStorage.getItem(OWNER_AUTH_KEY) === "true");
   const [activeCategory, setActiveCategory] = useState(null);
   const [page, setPage] = useState("dashboard"); // "dashboard" | "tasks"
   const [attendanceToday, setAttendanceToday] = useState([]);
@@ -1201,6 +1323,10 @@ export default function OpsHubOwnerConsole() {
     };
   }, []);
 
+  if (!unlocked) {
+    return <LoginGate onUnlock={() => setUnlocked(true)} />;
+  }
+
   return (
     <div
       style={{
@@ -1265,32 +1391,55 @@ export default function OpsHubOwnerConsole() {
         }}
       >
         <div className="wrap" style={{ padding: "14px 0 12px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div
-              className="avatar"
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div
+                className="avatar"
+                style={{
+                  borderRadius: "50%",
+                  background: "#FFFFFF",
+                  border: `2px solid ${GOLD}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  overflow: "hidden",
+                  padding: 3,
+                }}
+              >
+                <img src={GAIN_LOGO} alt="Gain Optima" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+              </div>
+              <div>
+                <div className="titleBrand" style={{ color: "#EFE2BC", whiteSpace: "nowrap" }}>Gain Optima</div>
+                <div
+                  className="titleMain"
+                  style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#FFFFFF", whiteSpace: "nowrap" }}
+                >
+                  Owner Console
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem(OWNER_AUTH_KEY);
+                setUnlocked(false);
+              }}
+              className="tap"
               style={{
-                borderRadius: "50%",
-                background: "#FFFFFF",
-                border: `2px solid ${GOLD}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                background: "#FFFFFF14",
+                border: "1px solid #FFFFFF2A",
+                cursor: "pointer",
                 flexShrink: 0,
-                overflow: "hidden",
-                padding: 3,
               }}
             >
-              <img src={GAIN_LOGO} alt="Gain Optima" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            </div>
-            <div>
-              <div className="titleBrand" style={{ color: "#EFE2BC", whiteSpace: "nowrap" }}>Gain Optima</div>
-              <div
-                className="titleMain"
-                style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: "#FFFFFF", whiteSpace: "nowrap" }}
-              >
-                Owner Console
-              </div>
-            </div>
+              <LogOut size={14} color="#FFFFFF" />
+            </button>
           </div>
 
           {/* แถวปุ่มลัด — Task Tracker + Gymmo Console เรียงเต็มแนวนอน */}
