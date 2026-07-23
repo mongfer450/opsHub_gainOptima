@@ -38,7 +38,6 @@ const GOLD_DARK = "#7A5E12";
 // (ฝังอยู่ใน JS ที่ browser โหลดมา ใครเปิด view-source/network tab ก็เห็นได้ ไม่ใช่ความปลอดภัยจริงจัง
 //  ถ้าต้องการปลอดภัยจริง แนะนำ Cloudflare Access แทน)
 const OWNER_PASSWORD = "gainoptima2026";
-const OWNER_AUTH_KEY = "gainoptima_owner_auth";
 
 const REVENUE_SHEET_ID = "11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4";
 const ATTENDANCE_SHEET_ID = "1xH5kKeXAqNaEZzheWAFZEKdQHbsMi55AipuoTkn_PoY";
@@ -430,6 +429,48 @@ const MOCK_TASKS = [
   { taskId: "T5", title: "เตรียมเอกสารต่อสัญญาเช่า", category: "เอกสาร", assignees: ["ต้า"], status: "เสร็จแล้ว", priority: "สูง", dueDate: "2026-07-15T12:00" },
 ];
 
+// ===== เชื่อมข้อมูล Task Tracker กับ Staff Hub =====
+// ใช้ localStorage เป็นตัวกลางชั่วคราว (ก่อนต่อ Apps Script Web App จริง)
+// ใช้งานได้จริงเพราะ localStorage ผูกกับ "origin" (โดเมน) ไม่ใช่ path — ถ้า Owner Console กับ Staff Hub
+// deploy อยู่ใต้ GitHub username เดียวกัน (เช่น username.github.io/owner-repo กับ username.github.io/staff-repo)
+// จะถือเป็น origin เดียวกัน แชร์ localStorage กันได้ทันที ไม่ต้องรอ backend จริง
+const SHARED_TASKS_KEY = "gainoptima_shared_tasks";
+const SHARED_EMPLOYEES_KEY = "gainoptima_shared_employees";
+
+function loadSharedTasks() {
+  try {
+    const raw = localStorage.getItem(SHARED_TASKS_KEY);
+    return raw ? JSON.parse(raw) : MOCK_TASKS;
+  } catch (e) {
+    return MOCK_TASKS;
+  }
+}
+
+function saveSharedTasks(list) {
+  try {
+    localStorage.setItem(SHARED_TASKS_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.error("บันทึก tasks ไม่สำเร็จ", e);
+  }
+}
+
+function loadSharedEmployees(fallback) {
+  try {
+    const raw = localStorage.getItem(SHARED_EMPLOYEES_KEY);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function saveSharedEmployees(list) {
+  try {
+    localStorage.setItem(SHARED_EMPLOYEES_KEY, JSON.stringify(list));
+  } catch (e) {
+    console.error("บันทึกรายชื่อพนักงานไม่สำเร็จ", e);
+  }
+}
+
 function isTaskOverdue(dueDate, status) {
   if (status === "เสร็จแล้ว") return false;
   return new Date(dueDate) < new Date();
@@ -697,8 +738,39 @@ function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete, 
 }
 
 function TaskTrackerPage({ onBack }) {
-  const [tasks, setTasks] = useState(MOCK_TASKS);
-  const [employees, setEmployees] = useState(TASK_EMPLOYEES.filter((n) => n !== "ทั้งหมด"));
+  const [tasks, setTasksState] = useState(loadSharedTasks);
+  const [employees, setEmployeesState] = useState(() => loadSharedEmployees(TASK_EMPLOYEES.filter((n) => n !== "ทั้งหมด")));
+
+  // เซฟลง localStorage ทุกครั้งที่ tasks/employees เปลี่ยน — ให้ Staff Hub อ่านค่าล่าสุดได้
+  const setTasks = (next) => {
+    setTasksState(next);
+    saveSharedTasks(next);
+  };
+  const setEmployees = (updater) => {
+    setEmployeesState((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      saveSharedEmployees(next);
+      return next;
+    });
+  };
+
+  // ถ้าเปิด Owner Console กับ Staff Hub คนละแท็บพร้อมกัน (origin เดียวกัน) ให้ sync สดๆ ข้ามแท็บ
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === SHARED_TASKS_KEY && e.newValue) {
+        try {
+          setTasksState(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+      if (e.key === SHARED_EMPLOYEES_KEY && e.newValue) {
+        try {
+          setEmployeesState(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
   const [addFormOpen, setAddFormOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newAssignees, setNewAssignees] = useState([]);
@@ -1112,7 +1184,6 @@ function LoginGate({ onUnlock }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (password === OWNER_PASSWORD) {
-      localStorage.setItem(OWNER_AUTH_KEY, "true");
       onUnlock();
     } else {
       setError(true);
@@ -1205,7 +1276,7 @@ function LoginGate({ onUnlock }) {
 }
 
 export default function OpsHubOwnerConsole() {
-  const [unlocked, setUnlocked] = useState(() => localStorage.getItem(OWNER_AUTH_KEY) === "true");
+  const [unlocked, setUnlocked] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [page, setPage] = useState("dashboard"); // "dashboard" | "tasks"
   const [attendanceToday, setAttendanceToday] = useState([]);
@@ -1421,7 +1492,6 @@ export default function OpsHubOwnerConsole() {
             </div>
             <button
               onClick={() => {
-                localStorage.removeItem(OWNER_AUTH_KEY);
                 setUnlocked(false);
               }}
               className="tap"
