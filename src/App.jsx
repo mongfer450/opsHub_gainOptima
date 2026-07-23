@@ -23,9 +23,9 @@ import {
   Plus,
   Clock,
   AlertCircle,
-  X,
   Filter,
   Pencil,
+  X,
   Check,
 } from "lucide-react";
 
@@ -403,30 +403,42 @@ function IconCard({ icon: Icon, label, description, onClick, href }) {
 
 // ===== Task Tracker (mock data ตอนนี้ — เปลี่ยนเป็น fetch(WEB_APP_URL) เมื่อ deploy Apps Script Web App แล้ว) =====
 const TASK_PRIORITY_COLOR = { สูง: "#DC2626", กลาง: "#F59E0B", ต่ำ: "#16A34A" };
-const TASK_STATUSES = ["ต้องทำ", "กำลังทำ", "เสร็จแล้ว"];
+// TASK_STATUSES = สถานะที่ตั้งเองได้ (ปุ่มบนการ์ด) — "เลยกำหนด" ไม่ได้อยู่ในนี้ เพราะคำนวณอัตโนมัติจากวันที่ ไม่ใช่กดเลือกเอง
+const TASK_STATUSES = ["ให้งานแล้ว", "เสร็จแล้ว"];
+// KANBAN_COLUMNS = คอลัมน์ที่โชว์จริงบนหน้าจอ (เพิ่ม "เลยกำหนด" แทรกไว้)
+const KANBAN_COLUMNS = ["ให้งานแล้ว", "เลยกำหนด", "เสร็จแล้ว"];
 const TASK_EMPLOYEES = ["ทั้งหมด", "ต้า", "Copter", "เมล", "เพชร", "ดีม", "เกม", "เป้", "จีจี้"];
 const STATUS_STYLE = {
-  ต้องทำ: { bg: "#FEF8E9", border: "#F3E3B0", text: "#B7791F", dot: "#D69E2E" },
-  กำลังทำ: { bg: "#F2EFFB", border: "#DCD3F5", text: "#6B46C1", dot: "#8B5CF6" },
+  ให้งานแล้ว: { bg: "#FEF8E9", border: "#F3E3B0", text: "#B7791F", dot: "#D69E2E" },
+  เลยกำหนด: { bg: "#FDECEC", border: "#F5C2C2", text: "#B91C1C", dot: "#DC2626" },
   เสร็จแล้ว: { bg: "#EAF7EE", border: "#C6E9CF", text: "#15803D", dot: "#22C55E" },
 };
 
 const MOCK_TASKS = [
-  { taskId: "T1", title: "ซ่อมลู่วิ่งตัวที่ 3", category: "ซ่อมบำรุง", assignees: ["ต้า"], status: "ต้องทำ", priority: "สูง", dueDate: "2026-07-20" },
-  { taskId: "T2", title: "สั่งซื้อผ้าเช็ดตัวเพิ่ม", category: "ทั่วไป", assignees: ["เมล"], status: "ต้องทำ", priority: "กลาง", dueDate: "2026-07-25" },
-  { taskId: "T3", title: "อัปเดตราคาแพ็กเกจในเพจ", category: "การตลาด", assignees: ["จีจี้", "เมล"], status: "กำลังทำ", priority: "กลาง", dueDate: "2026-07-22" },
-  { taskId: "T4", title: "ทำความสะอาดเครื่องปรับอากาศ", category: "ความสะอาด", assignees: ["เกม"], status: "กำลังทำ", priority: "ต่ำ", dueDate: "2026-07-18" },
-  { taskId: "T5", title: "เตรียมเอกสารต่อสัญญาเช่า", category: "เอกสาร", assignees: ["ต้า"], status: "เสร็จแล้ว", priority: "สูง", dueDate: "2026-07-15" },
+  { taskId: "T1", title: "ซ่อมลู่วิ่งตัวที่ 3", category: "ซ่อมบำรุง", assignees: ["ต้า"], status: "ให้งานแล้ว", priority: "สูง", dueDate: "2026-07-20T10:00" },
+  { taskId: "T2", title: "สั่งซื้อผ้าเช็ดตัวเพิ่ม", category: "ทั่วไป", assignees: ["เมล"], status: "ให้งานแล้ว", priority: "กลาง", dueDate: "2026-07-25T18:00" },
+  { taskId: "T3", title: "อัปเดตราคาแพ็กเกจในเพจ", category: "การตลาด", assignees: ["จีจี้", "เมล"], status: "ให้งานแล้ว", priority: "กลาง", dueDate: "2026-07-22T09:00" },
+  { taskId: "T4", title: "ทำความสะอาดเครื่องปรับอากาศ", category: "ความสะอาด", assignees: ["เกม"], status: "ให้งานแล้ว", priority: "ต่ำ", dueDate: "2026-07-18T17:00" },
+  { taskId: "T5", title: "เตรียมเอกสารต่อสัญญาเช่า", category: "เอกสาร", assignees: ["ต้า"], status: "เสร็จแล้ว", priority: "สูง", dueDate: "2026-07-15T12:00" },
 ];
 
 function isTaskOverdue(dueDate, status) {
   if (status === "เสร็จแล้ว") return false;
-  return new Date(dueDate) < new Date(new Date().toDateString());
+  return new Date(dueDate) < new Date();
 }
 
 function fmtTaskDate(d) {
   const date = new Date(d);
-  return date.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  const dateStr = date.toLocaleDateString("th-TH", { day: "numeric", month: "short" });
+  const timeStr = date.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+  return `${dateStr} ${timeStr}`;
+}
+
+// ค่าเริ่มต้นของ input datetime-local — วันนี้ เวลาปัจจุบัน
+function defaultDueDateTime() {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 16);
 }
 
 const TASK_CATEGORY_COLORS = {
@@ -437,10 +449,9 @@ const TASK_CATEGORY_COLORS = {
   เอกสาร: { bg: "#FCE7F3", text: "#BE185D" },
 };
 const TASK_CATEGORY_DEFAULT = { bg: `${GOLD}1A`, text: GOLD_DARK };
-const ALL_ASSIGNABLE = TASK_EMPLOYEES.filter((n) => n !== "ทั้งหมด");
 
 // การ์ดแสดง avatar ซ้อนกันของทุกคนที่ถูก assign + กดเปิด popover เลือกได้หลายคน (รวมปุ่ม "ทุกคน")
-function AssigneeMultiPicker({ value, onChange }) {
+function AssigneeMultiPicker({ value, onChange, employees }) {
   const [open, setOpen] = useState(false);
   const assignees = value || [];
 
@@ -448,7 +459,7 @@ function AssigneeMultiPicker({ value, onChange }) {
     if (assignees.includes(name)) onChange(assignees.filter((n) => n !== name));
     else onChange([...assignees, name]);
   };
-  const selectAll = () => onChange(ALL_ASSIGNABLE);
+  const selectAll = () => onChange(employees);
   const clearAll = () => onChange([]);
 
   return (
@@ -537,7 +548,7 @@ function AssigneeMultiPicker({ value, onChange }) {
               </button>
             </div>
             <div style={{ maxHeight: 180, overflowY: "auto" }}>
-              {ALL_ASSIGNABLE.map((name) => {
+              {employees.map((name) => {
                 const checked = assignees.includes(name);
                 return (
                   <label
@@ -557,7 +568,7 @@ function AssigneeMultiPicker({ value, onChange }) {
   );
 }
 
-function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete }) {
+function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, employees }) {
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState({ title: task.title, category: task.category, dueDate: task.dueDate });
   const overdue = isTaskOverdue(task.dueDate, task.status);
@@ -598,12 +609,6 @@ function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete }
         >
           {isEditing ? <Check size={16} /> : <Pencil size={14} />}
         </button>
-        <button
-          onClick={() => onDelete(task.taskId)}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: "#D1D5DB", flexShrink: 0, borderRadius: 6 }}
-        >
-          <X size={15} />
-        </button>
       </div>
 
       <div style={{ marginTop: 8 }}>
@@ -625,7 +630,7 @@ function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete }
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
         {isEditing ? (
           <input
-            type="date"
+            type="datetime-local"
             value={draft.dueDate}
             onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
             style={{ fontSize: 11, border: "1px solid #ECE9E1", borderRadius: 8, padding: "4px 6px", fontFamily: "inherit" }}
@@ -645,7 +650,7 @@ function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete }
             {fmtTaskDate(task.dueDate)}
           </span>
         )}
-        <AssigneeMultiPicker value={task.assignees} onChange={(v) => onAssigneeChange(task.taskId, v)} />
+        <AssigneeMultiPicker value={task.assignees} onChange={(v) => onAssigneeChange(task.taskId, v)} employees={employees} />
       </div>
 
       {/* เปลี่ยนสถานะ — กดย้ายคอลัมน์ */}
@@ -679,27 +684,36 @@ function TaskCard({ task, onStatusChange, onAssigneeChange, onUpdate, onDelete }
 
 function TaskTrackerPage({ onBack }) {
   const [tasks, setTasks] = useState(MOCK_TASKS);
+  const [employees, setEmployees] = useState(TASK_EMPLOYEES.filter((n) => n !== "ทั้งหมด"));
+  const [addFormOpen, setAddFormOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
-  const [newAssignee, setNewAssignee] = useState("-");
+  const [newAssignees, setNewAssignees] = useState([]);
+  const [newPickerOpen, setNewPickerOpen] = useState(false);
+  const [newDueDate, setNewDueDate] = useState(defaultDueDateTime());
   const [filterEmployee, setFilterEmployee] = useState("ทั้งหมด");
+  const [openColumns, setOpenColumns] = useState({});
+  const [manageEmployeesOpen, setManageEmployeesOpen] = useState(false);
+  const [newEmployeeName, setNewEmployeeName] = useState("");
 
   const handleAdd = () => {
     if (!newTitle.trim()) return;
-    // ของจริง: fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'add', title: newTitle, assignees: [...] }) })
+    // ของจริง: fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'add', title: newTitle, assignees: newAssignees, dueDate: newDueDate }) })
     setTasks([
       {
         taskId: "T" + Date.now(),
         title: newTitle.trim(),
         category: "ทั่วไป",
-        assignees: newAssignee === "-" ? [] : [newAssignee],
-        status: "ต้องทำ",
+        assignees: newAssignees,
+        status: "ให้งานแล้ว",
         priority: "กลาง",
-        dueDate: new Date().toISOString().slice(0, 10),
+        dueDate: newDueDate,
       },
       ...tasks,
     ]);
     setNewTitle("");
-    setNewAssignee("-");
+    setNewAssignees([]);
+    setNewDueDate(defaultDueDateTime());
+    setAddFormOpen(false);
   };
 
   const handleStatusChange = (taskId, status) => {
@@ -717,13 +731,46 @@ function TaskTrackerPage({ onBack }) {
     setTasks(tasks.map((t) => (t.taskId === taskId ? { ...t, ...updates } : t)));
   };
 
-  const handleDelete = (taskId) => {
-    // ของจริง: fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete', taskId }) })
-    setTasks(tasks.filter((t) => t.taskId !== taskId));
+  const toggleNewAssignee = (name) => {
+    setNewAssignees((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
+  };
+
+  // ===== จัดการรายชื่อพนักงาน — แก้ไข/เพิ่ม/ลบ =====
+  const renameEmployee = (oldName, newName) => {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    setEmployees((prev) => prev.map((e) => (e === oldName ? trimmed : e)));
+    setTasks((prev) =>
+      prev.map((t) => ({
+        ...t,
+        assignees: (t.assignees || []).map((a) => (a === oldName ? trimmed : a)),
+      }))
+    );
+    if (filterEmployee === oldName) setFilterEmployee(trimmed);
+  };
+
+  const addEmployee = () => {
+    const trimmed = newEmployeeName.trim();
+    if (!trimmed || employees.includes(trimmed)) return;
+    setEmployees((prev) => [...prev, trimmed]);
+    setNewEmployeeName("");
+  };
+
+  const removeEmployee = (name) => {
+    setEmployees((prev) => prev.filter((e) => e !== name));
+    setTasks((prev) => prev.map((t) => ({ ...t, assignees: (t.assignees || []).filter((a) => a !== name) })));
+    if (filterEmployee === name) setFilterEmployee("ทั้งหมด");
   };
 
   const filtered = filterEmployee === "ทั้งหมด" ? tasks : tasks.filter((t) => (t.assignees || []).includes(filterEmployee));
   const overdueCount = tasks.filter((t) => isTaskOverdue(t.dueDate, t.status)).length;
+
+  // แต่ละคอลัมน์ใช้ filter ต่างกัน — "เลยกำหนด" คำนวณจากวันที่ ไม่ใช่ค่าที่ตั้งเอง
+  const getColumnTasks = (column) => {
+    if (column === "เลยกำหนด") return filtered.filter((t) => t.status === "ให้งานแล้ว" && isTaskOverdue(t.dueDate, t.status));
+    if (column === "ให้งานแล้ว") return filtered.filter((t) => t.status === "ให้งานแล้ว" && !isTaskOverdue(t.dueDate, t.status));
+    return filtered.filter((t) => t.status === column);
+  };
 
   return (
     <div className="wrap" style={{ marginTop: 20 }}>
@@ -754,42 +801,184 @@ function TaskTrackerPage({ onBack }) {
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <input
-          value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-          placeholder="พิมพ์งานใหม่แล้วกด Enter..."
-          style={{ flex: 1, fontSize: 13.5, padding: "12px 16px", border: "1px solid #ECE9E1", borderRadius: 14, outline: "none", fontFamily: "inherit", background: "#FFFFFF" }}
-        />
-        <select
-          value={newAssignee}
-          onChange={(e) => setNewAssignee(e.target.value)}
+      {/* ปุ่มเดียว "+ เพิ่มงาน" — กดแล้วค่อยกางฟอร์มกรอกชื่องาน + มอบหมาย */}
+      {!addFormOpen ? (
+        <button
+          onClick={() => setAddFormOpen(true)}
+          className="tap"
           style={{
-            fontSize: 13,
-            padding: "0 12px",
-            border: "1px solid #ECE9E1",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            width: "100%",
+            background: GOLD_DARK,
+            color: "#FFFFFF",
+            border: "none",
             borderRadius: 14,
-            outline: "none",
-            fontFamily: "inherit",
-            background: "#FFFFFF",
-            color: newAssignee === "-" ? "#9CA3AF" : "#111318",
-            flexShrink: 0,
+            padding: "12px 0",
+            fontSize: 13.5,
+            fontWeight: 700,
+            cursor: "pointer",
+            marginBottom: 16,
           }}
         >
-          <option value="-">มอบหมายให้...</option>
-          {TASK_EMPLOYEES.filter((n) => n !== "ทั้งหมด").map((name) => (
-            <option key={name} value={name}>
-              {name}
-            </option>
-          ))}
-        </select>
-        <button
-          onClick={handleAdd}
-          style={{ display: "flex", alignItems: "center", gap: 5, background: GOLD_DARK, color: "#FFFFFF", border: "none", borderRadius: 14, padding: "0 18px", fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}
-        >
-          <Plus size={16} /> เพิ่ม
+          <Plus size={16} /> เพิ่มงาน
         </button>
+      ) : (
+        <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, padding: 14, marginBottom: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>เพิ่มงาน</div>
+          <input
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+            placeholder="พิมพ์ชื่องาน..."
+            autoFocus
+            style={{ width: "100%", fontSize: 13.5, padding: "10px 14px", border: "1px solid #ECE9E1", borderRadius: 12, outline: "none", fontFamily: "inherit", marginBottom: 10 }}
+          />
+
+          {/* เลือกผู้รับมอบหมาย — เลือกได้หลายคน หรือกด "ทุกคน" */}
+          <div style={{ position: "relative", marginBottom: 10 }}>
+            <button
+              onClick={() => setNewPickerOpen((v) => !v)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                fontSize: 13,
+                padding: "9px 14px",
+                width: "100%",
+                border: "1px solid #ECE9E1",
+                borderRadius: 12,
+                outline: "none",
+                fontFamily: "inherit",
+                background: "#FAFAF8",
+                color: newAssignees.length ? "#111318" : "#9CA3AF",
+                cursor: "pointer",
+              }}
+            >
+              {newAssignees.length === 0 ? "มอบหมายให้..." : newAssignees.length === 1 ? newAssignees[0] : `${newAssignees.length} คน`}
+            </button>
+            {newPickerOpen && (
+              <>
+                <div style={{ position: "fixed", inset: 0, zIndex: 30 }} onClick={() => setNewPickerOpen(false)} />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    right: 0,
+                    zIndex: 31,
+                    background: "#FFFFFF",
+                    border: "1px solid #ECE9E1",
+                    borderRadius: 14,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
+                    padding: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+                    <button
+                      onClick={() => setNewAssignees(employees)}
+                      style={{ flex: 1, fontSize: 10.5, fontWeight: 700, color: GOLD_DARK, background: `${GOLD}1A`, border: "none", borderRadius: 8, padding: "5px 0", cursor: "pointer" }}
+                    >
+                      ทุกคน
+                    </button>
+                    <button
+                      onClick={() => setNewAssignees([])}
+                      style={{ flex: 1, fontSize: 10.5, fontWeight: 600, color: "#9CA3AF", background: "#F3F4F6", border: "none", borderRadius: 8, padding: "5px 0", cursor: "pointer" }}
+                    >
+                      ล้าง
+                    </button>
+                  </div>
+                  <div style={{ maxHeight: 180, overflowY: "auto" }}>
+                    {employees.map((name) => {
+                      const checked = newAssignees.includes(name);
+                      return (
+                        <label key={name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 4px", cursor: "pointer", borderRadius: 6 }}>
+                          <input type="checkbox" checked={checked} onChange={() => toggleNewAssignee(name)} style={{ accentColor: GOLD_DARK }} />
+                          <span style={{ fontSize: 12, fontWeight: checked ? 700 : 500, color: checked ? "#111318" : "#6B7280" }}>{name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* กำหนดส่ง — วันที่ + เวลา */}
+          <input
+            type="datetime-local"
+            value={newDueDate}
+            onChange={(e) => setNewDueDate(e.target.value)}
+            style={{ width: "100%", fontSize: 13, padding: "9px 14px", border: "1px solid #ECE9E1", borderRadius: 12, outline: "none", fontFamily: "inherit", background: "#FAFAF8", marginBottom: 10 }}
+          />
+
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => {
+                setAddFormOpen(false);
+                setNewTitle("");
+                setNewAssignees([]);
+                setNewDueDate(defaultDueDateTime());
+              }}
+              style={{ flex: 1, fontSize: 13, fontWeight: 600, color: "#9CA3AF", background: "#F3F4F6", border: "none", borderRadius: 12, padding: "10px 0", cursor: "pointer" }}
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={handleAdd}
+              style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#FFFFFF", background: GOLD_DARK, border: "none", borderRadius: 12, padding: "10px 0", cursor: "pointer" }}
+            >
+              บันทึก
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* จัดการรายชื่อพนักงาน — แก้ไข/เพิ่ม/ลบ */}
+      <div style={{ marginBottom: 12 }}>
+        <button
+          onClick={() => setManageEmployeesOpen((v) => !v)}
+          style={{ fontSize: 11.5, fontWeight: 600, color: GOLD_DARK, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 4 }}
+        >
+          <Pencil size={12} /> {manageEmployeesOpen ? "ปิดจัดการพนักงาน" : "จัดการรายชื่อพนักงาน"}
+        </button>
+        {manageEmployeesOpen && (
+          <div style={{ marginTop: 8, background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 14, padding: 12 }}>
+            {employees.map((name) => (
+              <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <input
+                  defaultValue={name}
+                  onBlur={(e) => renameEmployee(name, e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+                  style={{ flex: 1, fontSize: 12.5, padding: "6px 10px", border: "1px solid #ECE9E1", borderRadius: 8, fontFamily: "inherit" }}
+                />
+                <button
+                  onClick={() => removeEmployee(name)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#D1D5DB", padding: 4 }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+            <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+              <input
+                value={newEmployeeName}
+                onChange={(e) => setNewEmployeeName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addEmployee()}
+                placeholder="เพิ่มชื่อพนักงานใหม่..."
+                style={{ flex: 1, fontSize: 12.5, padding: "6px 10px", border: "1px solid #ECE9E1", borderRadius: 8, fontFamily: "inherit" }}
+              />
+              <button
+                onClick={addEmployee}
+                style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", background: GOLD_DARK, border: "none", borderRadius: 8, padding: "0 14px", cursor: "pointer" }}
+              >
+                เพิ่ม
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
@@ -803,7 +992,7 @@ function TaskTrackerPage({ onBack }) {
         }}
       >
         <Filter size={14} color="#9CA3AF" style={{ flexShrink: 0 }} />
-        {TASK_EMPLOYEES.map((name) => (
+        {["ทั้งหมด", ...employees].map((name) => (
           <button
             key={name}
             onClick={() => setFilterEmployee(name)}
@@ -826,14 +1015,28 @@ function TaskTrackerPage({ onBack }) {
       </div>
 
       <div className="kanbanGrid">
-        {TASK_STATUSES.map((status) => {
-          const columnTasks = filtered.filter((t) => t.status === status);
-          const s = STATUS_STYLE[status];
+        {KANBAN_COLUMNS.map((column) => {
+          const columnTasks = getColumnTasks(column);
+          const s = STATUS_STYLE[column];
+          const isOpen = !!openColumns[column];
           return (
-            <div key={status} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 18, padding: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, padding: "0 2px" }}>
+            <div key={column} style={{ background: s.bg, border: `1px solid ${s.border}`, borderRadius: 18, padding: 12 }}>
+              <button
+                onClick={() => setOpenColumns((prev) => ({ ...prev, [column]: !prev[column] }))}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "0 2px",
+                  marginBottom: isOpen ? 12 : 0,
+                }}
+              >
                 <span style={{ width: 8, height: 8, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-                <span style={{ fontSize: 13, fontWeight: 700, color: s.text }}>{status}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: s.text }}>{column}</span>
                 <span
                   style={{
                     fontSize: 10.5,
@@ -845,23 +1048,29 @@ function TaskTrackerPage({ onBack }) {
                     marginLeft: "auto",
                   }}
                 >
-                  {columnTasks.length}
+                  {columnTasks.length} งาน
                 </span>
-              </div>
-              {columnTasks.length === 0 ? (
-                <div style={{ fontSize: 11.5, color: "#B8B4AE", padding: "28px 0", textAlign: "center" }}>ไม่มีงาน</div>
-              ) : (
-                columnTasks.map((task) => (
-                  <TaskCard
-                    key={task.taskId}
-                    task={task}
-                    onStatusChange={handleStatusChange}
-                    onAssigneeChange={handleAssigneeChange}
-                    onUpdate={handleUpdateTask}
-                    onDelete={handleDelete}
-                  />
-                ))
-              )}
+                <ChevronLeft
+                  size={14}
+                  color={s.text}
+                  style={{ transform: isOpen ? "rotate(90deg)" : "rotate(-90deg)", transition: "transform 0.15s ease", flexShrink: 0 }}
+                />
+              </button>
+              {isOpen &&
+                (columnTasks.length === 0 ? (
+                  <div style={{ fontSize: 11.5, color: "#B8B4AE", padding: "28px 0", textAlign: "center" }}>ไม่มีงาน</div>
+                ) : (
+                  columnTasks.map((task) => (
+                    <TaskCard
+                      key={task.taskId}
+                      task={task}
+                      onStatusChange={handleStatusChange}
+                      onAssigneeChange={handleAssigneeChange}
+                      onUpdate={handleUpdateTask}
+                      employees={employees}
+                    />
+                  ))
+                ))}
             </div>
           );
         })}
@@ -1045,19 +1254,18 @@ export default function OpsHubOwnerConsole() {
         }
       `}</style>
 
-      {/* Header (frozen) — โลโก้ซ้าย, Gymmo Console ขวา */}
+      {/* Header (frozen) — สี่เหลี่ยมเต็มแนวนอน ไม่มีขอบมน */}
       <div
         style={{
           position: "sticky",
           top: 0,
           zIndex: 20,
           background: `linear-gradient(120deg, #1A1712 0%, ${GOLD_DARK} 55%, ${GOLD} 100%)`,
-          borderRadius: "0 0 26px 26px",
           boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
         }}
       >
-        <div className="wrap headerInner" style={{ justifyContent: "space-between" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+        <div className="wrap" style={{ padding: "14px 0 12px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div
               className="avatar"
               style={{
@@ -1085,24 +1293,26 @@ export default function OpsHubOwnerConsole() {
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          {/* แถวปุ่มลัด — Task Tracker + Gymmo Console เรียงเต็มแนวนอน */}
+          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button
               onClick={() => setPage("tasks")}
               className="tap"
               style={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 6,
+                flex: 1,
                 background: "#FFFFFF14",
                 border: "1px solid #FFFFFF2A",
-                borderRadius: 20,
-                padding: "6px 12px",
+                borderRadius: 12,
+                padding: "9px 10px",
                 cursor: "pointer",
-                flexShrink: 0,
               }}
             >
               <ListChecks size={14} color="#FFFFFF" />
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#FFFFFF", whiteSpace: "nowrap" }}>Task Tracker</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#FFFFFF", whiteSpace: "nowrap" }}>Task Tracker</span>
             </button>
 
             <a
@@ -1111,18 +1321,19 @@ export default function OpsHubOwnerConsole() {
               style={{
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 gap: 7,
+                flex: 1,
                 textDecoration: "none",
                 background: "#FFFFFF",
-                borderRadius: 20,
-                padding: "4px 12px 4px 4px",
-                flexShrink: 0,
+                borderRadius: 12,
+                padding: "6px 10px",
               }}
             >
               <div
                 style={{
-                  width: 24,
-                  height: 24,
+                  width: 22,
+                  height: 22,
                   borderRadius: "50%",
                   background: "#FFFFFF",
                   border: "1px solid #ECE9E1",
@@ -1136,7 +1347,7 @@ export default function OpsHubOwnerConsole() {
               >
                 <img src={GYMMO_LOGO} alt="Gymmo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               </div>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>Gymmo Console</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>Gymmo Console</span>
             </a>
           </div>
         </div>
@@ -1226,68 +1437,73 @@ export default function OpsHubOwnerConsole() {
               {showEmployeeDetail ? "ซ่อนรายละเอียดพนักงาน ▲" : "ดูรายละเอียดพนักงาน ▼"}
             </button>
             {showEmployeeDetail && (
-              <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 6 }}>
-                * ยอด MB รายบุคคลยังไม่ครบ เพราะฟอร์ม MB ยังไม่ได้ส่งชื่อพนักงานไปที่ Sheet (ต้องแก้ Apps Script) — ยอดรวม MB ด้านบนถูกต้อง แต่ตารางด้านล่างนี้จะเห็นแค่ยอด PT รายคน
-              </div>
-            )}
-
-            {showEmployeeDetail && (
               <div style={{ marginTop: 10, background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
                 {employeeSales.length === 0 ? (
                   <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>ยังไม่มีข้อมูลยอดขาย</div>
                 ) : (
-                  <>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        padding: "8px 16px",
-                        background: "#FAFAF8",
-                        fontSize: 10.5,
-                        color: "#9CA3AF",
-                        fontWeight: 600,
-                      }}
-                    >
-                      <span style={{ flex: 1 }}>พนักงาน</span>
-                      <span style={{ width: 90, textAlign: "right" }}>MB</span>
-                      <span style={{ width: 90, textAlign: "right" }}>PT</span>
-                    </div>
-                    {employeeSales.map((row) => (
+                  employeeSales.map((row, i) => {
+                    const rank = i + 1;
+                    const total = (row.mb || 0) + (row.pt || 0);
+                    const medal =
+                      rank === 1
+                        ? { bg: "#FFF6DC", border: "#D4AF37", text: "#8A6D1D", label: "🥇" }
+                        : rank === 2
+                        ? { bg: "#F4F4F5", border: "#B0B3B8", text: "#5E6166", label: "🥈" }
+                        : rank === 3
+                        ? { bg: "#FBEEE3", border: "#C97F3C", text: "#8A501E", label: "🥉" }
+                        : null;
+                    return (
                       <div
                         key={row.name}
                         style={{
                           display: "flex",
                           alignItems: "center",
-                          padding: "10px 16px",
-                          borderTop: "1px solid #F0EEE8",
+                          gap: 12,
+                          padding: "12px 16px",
+                          borderTop: i === 0 ? "none" : "1px solid #F0EEE8",
+                          background: medal ? medal.bg : "transparent",
                         }}
                       >
-                        <span style={{ flex: 1, fontSize: 13, fontWeight: 600 }}>{row.name}</span>
-                        <span
+                        <div
                           style={{
-                            width: 90,
-                            textAlign: "right",
-                            fontSize: 12,
-                            color: "#111318",
-                            fontFamily: "'Space Grotesk', sans-serif",
+                            width: 30,
+                            height: 30,
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            background: medal ? "#FFFFFF" : "#F5F5F3",
+                            border: medal ? `1.5px solid ${medal.border}` : "1px solid #ECE9E1",
+                            fontSize: medal ? 15 : 12.5,
+                            fontWeight: 700,
+                            color: medal ? medal.text : "#9CA3AF",
                           }}
                         >
-                          {fmtBaht(row.mb)}
-                        </span>
+                          {medal ? medal.label : rank}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 13.5, fontWeight: medal ? 700 : 600, color: medal ? medal.text : "#111318" }}>
+                            {row.name}
+                          </div>
+                          <div style={{ fontSize: 10.5, color: "#9CA3AF", marginTop: 1 }}>
+                            MB {fmtBaht(row.mb)} · PT {fmtBaht(row.pt)}
+                          </div>
+                        </div>
                         <span
                           style={{
-                            width: 90,
-                            textAlign: "right",
-                            fontSize: 12,
-                            color: "#111318",
+                            fontSize: 13.5,
+                            fontWeight: 700,
                             fontFamily: "'Space Grotesk', sans-serif",
+                            color: medal ? medal.text : "#111318",
+                            flexShrink: 0,
                           }}
                         >
-                          {fmtBaht(row.pt)}
+                          {fmtBaht(total)}
                         </span>
                       </div>
-                    ))}
-                  </>
+                    );
+                  })
                 )}
               </div>
             )}
