@@ -1742,7 +1742,7 @@ export default function OpsHubOwnerConsole() {
             const totalClub = monthSales.club;
             const totalPT = monthSales.pt;
             const CLUB_TARGET = 1000000;
-            const PT_TARGET = 480000;
+            const PT_TARGET = 500000;
             const clubPct = Math.min(100, Math.round((totalClub / CLUB_TARGET) * 100));
             const ptPct = Math.min(100, Math.round((totalPT / PT_TARGET) * 100));
             return (
