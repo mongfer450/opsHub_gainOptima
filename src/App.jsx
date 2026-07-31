@@ -37,7 +37,7 @@ const GOLD_DARK = "#7A5E12";
 // รหัสผ่านเข้าใช้งาน — เป็นแค่ตัวกันคนทั่วไปเปิดผ่านๆ เท่านั้น
 // (ฝังอยู่ใน JS ที่ browser โหลดมา ใครเปิด view-source/network tab ก็เห็นได้ ไม่ใช่ความปลอดภัยจริงจัง
 //  ถ้าต้องการปลอดภัยจริง แนะนำ Cloudflare Access แทน)
-const OWNER_PASSWORD = "gainoptima2026";
+const OWNER_PASSWORD = "owner25";
 
 const REVENUE_SHEET_ID = "11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4";
 const ATTENDANCE_SHEET_ID = "1xH5kKeXAqNaEZzheWAFZEKdQHbsMi55AipuoTkn_PoY";
