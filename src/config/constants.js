@@ -9,3 +9,11 @@ export const ATTENDANCE_SHEET_TAB = "การตอบแบบฟอร์ม 
 
 export const CLUB_TARGET = 1500000;
 export const PT_TARGET = 750000;
+
+export const EMPLOYEE_TARGETS = [
+  { name: "ปราย", target: 150000 },
+  { name: "เมล", target: 150000 },
+  { name: "เพชร", target: 80000 },
+  { name: "ดีม", target: 80000 },
+  { name: "Copter", target: 80000 },
+];
