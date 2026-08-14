@@ -1,4 +1,4 @@
-import { GOLD_DARK } from "../config/constants";
+import { EMPLOYEE_TARGETS, GOLD_DARK } from "../config/constants";
 import { fmtBaht } from "../utils/formatters";
 
 export function SalesOverview({
@@ -85,14 +85,17 @@ export function SalesOverview({
 }
 
 function EmployeeLeaderboard({ employeeSales }) {
+  const rows = buildEmployeeTargetRows(employeeSales);
+
   return (
     <div style={{ marginTop: 10, background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, overflow: "hidden" }}>
-      {employeeSales.length === 0 ? (
+      {rows.length === 0 ? (
         <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF" }}>ยังไม่มีข้อมูลยอดขาย</div>
       ) : (
-        employeeSales.map((row, i) => {
+        rows.map((row, i) => {
           const rank = i + 1;
           const total = (row.mb || 0) + (row.pt || 0);
+          const remaining = row.target ? Math.max(0, row.target - (row.pt || 0)) : null;
           const medal =
             rank === 1
               ? { bg: "#FFF6DC", border: "#D4AF37", text: "#8A6D1D", label: "🥇" }
@@ -137,13 +140,45 @@ function EmployeeLeaderboard({ employeeSales }) {
                   MB {fmtBaht(row.mb)} · รวม {fmtBaht(total)}
                 </div>
               </div>
-              <span style={{ fontSize: 13.5, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: medal ? medal.text : "#111318", flexShrink: 0 }}>
-                {fmtBaht(row.pt)}
-              </span>
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: medal ? medal.text : "#111318" }}>
+                  {fmtBaht(row.pt)}
+                </div>
+                {row.target && (
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: remaining === 0 ? "#16A34A" : "#DC2626", marginTop: 3 }}>
+                    {remaining === 0 ? "≥ เป้า" : `< ${fmtBaht(remaining)}`}
+                  </div>
+                )}
+              </div>
             </div>
           );
         })
       )}
     </div>
   );
+}
+
+function buildEmployeeTargetRows(employeeSales) {
+  const salesByName = new Map(employeeSales.map((row) => [normalizeName(row.name), row]));
+  const targetNames = new Set(EMPLOYEE_TARGETS.map((row) => normalizeName(row.name)));
+
+  const targetRows = EMPLOYEE_TARGETS.map((targetRow) => {
+    const sales = salesByName.get(normalizeName(targetRow.name));
+    return {
+      name: targetRow.name,
+      mb: sales?.mb || 0,
+      pt: sales?.pt || 0,
+      target: targetRow.target,
+    };
+  });
+
+  const extraRows = employeeSales
+    .filter((row) => !targetNames.has(normalizeName(row.name)))
+    .map((row) => ({ ...row, target: null }));
+
+  return [...targetRows, ...extraRows].sort((a, b) => (b.pt || 0) - (a.pt || 0));
+}
+
+function normalizeName(name) {
+  return String(name || "").trim().toLowerCase();
 }
