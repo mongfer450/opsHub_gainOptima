@@ -16,4 +16,5 @@ export const EMPLOYEE_TARGETS = [
   { name: "เพชร", target: 80000 },
   { name: "ดีม", target: 80000 },
   { name: "Copter", target: 80000 },
+  { name: "แก้ม", target: 80000 },
 ];
