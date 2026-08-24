@@ -3,7 +3,7 @@ import { parseGvizDate } from "../utils/formatters";
 
 export async function fetchTodayAttendance() {
   const sheetName = encodeURIComponent(ATTENDANCE_SHEET_TAB);
-  const url = `https://docs.google.com/spreadsheets/d/${ATTENDANCE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=A2:B500`;
+  const url = `https://docs.google.com/spreadsheets/d/${ATTENDANCE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=A2:B`;
   const res = await fetch(url);
   const text = await res.text();
   const jsonStart = text.indexOf("{");
