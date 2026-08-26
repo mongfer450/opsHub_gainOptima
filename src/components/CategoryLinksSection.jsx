@@ -5,7 +5,7 @@ import { defaultCategories, getIcon, LINK_ICON_OPTIONS } from "../data/categorie
 import { IconCard } from "./IconCard";
 
 const LINK_STORAGE_KEY = "gainOptimaOwnerLinksV1";
-const DEFAULT_LINK_CONFIG = { categories: defaultCategories };
+const DEFAULT_LINK_CONFIG = { shortcuts: [], categories: defaultCategories };
 
 export function CategoryLinksSection({ activeCategory, linkEditMode, onSelectCategory, onBack }) {
   const [linkConfig, setLinkConfig] = useState(getStoredLinkConfig);
@@ -59,10 +59,24 @@ export function CategoryLinksSection({ activeCategory, linkEditMode, onSelectCat
     };
 
     updateLinks((next) => {
+      if (linkDraft.scope === "shortcuts") {
+        if (linkDraft.mode === "edit") next.shortcuts[linkDraft.index] = item;
+        else next.shortcuts.push(item);
+        return;
+      }
+
       const category = next.categories.find((entry) => entry.id === linkDraft.categoryId);
       if (!category) return;
       if (linkDraft.mode === "edit") category.items[linkDraft.index] = item;
       else category.items.push(item);
+    });
+    setLinkDraft(null);
+  }
+
+  function deleteShortcut(index) {
+    if (!window.confirm("ลบ Shortcut นี้ใช่ไหม?")) return;
+    updateLinks((next) => {
+      next.shortcuts.splice(index, 1);
     });
     setLinkDraft(null);
   }
@@ -98,8 +112,50 @@ export function CategoryLinksSection({ activeCategory, linkEditMode, onSelectCat
   return (
     <div className="wrap">
       {activeCategory === null ? (
-        <div style={{ marginTop: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
+        <>
+          <div style={{ marginTop: 24, background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, padding: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: linkEditMode || linkConfig.shortcuts.length > 0 ? 14 : 0 }}>
+              <div className="sectionTitle" style={{ fontWeight: 700 }}>Shortcut</div>
+              {linkEditMode && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCategoryDraft(null);
+                    setLinkDraft(emptyShortcutDraft());
+                  }}
+                  className="tap"
+                  style={secondaryButtonStyle}
+                >
+                  <Plus size={14} /> เพิ่ม
+                </button>
+              )}
+            </div>
+            {linkEditMode && linkDraft?.scope === "shortcuts" && (
+              <LinkEditor draft={linkDraft} onChange={setLinkDraft} onSubmit={saveLinkDraft} onCancel={() => setLinkDraft(null)} />
+            )}
+            {linkConfig.shortcuts.length > 0 && (
+              <div className="grid" style={{ marginTop: linkEditMode && linkDraft?.scope === "shortcuts" ? 14 : 0 }}>
+                {linkConfig.shortcuts.map((item, index) => (
+                  <IconCard
+                    key={`${item.label}-${index}`}
+                    icon={getIcon(item.iconKey)}
+                    label={item.label}
+                    description={item.description}
+                    href={item.href}
+                    editMode={linkEditMode}
+                    onEdit={() => {
+                      setCategoryDraft(null);
+                      setLinkDraft(linkToDraft("shortcuts", null, index, item));
+                    }}
+                    onDelete={() => deleteShortcut(index)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 32 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
             <div className="sectionTitle" style={{ fontWeight: 700 }}>ลิงก์จัดการ</div>
             {linkEditMode && (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
@@ -141,6 +197,7 @@ export function CategoryLinksSection({ activeCategory, linkEditMode, onSelectCat
             ))}
           </div>
         </div>
+        </>
       ) : (
         <>
           <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 8 }}>
@@ -190,7 +247,7 @@ export function CategoryLinksSection({ activeCategory, linkEditMode, onSelectCat
                 editMode={linkEditMode}
                 onEdit={() => {
                   setCategoryDraft(null);
-                  setLinkDraft(linkToDraft(activeCategory, index, item));
+                  setLinkDraft(linkToDraft("categoryItems", activeCategory, index, item));
                 }}
                 onDelete={() => deleteLink(activeCategory, index)}
               />
@@ -252,7 +309,7 @@ function getStoredLinkConfig() {
     if (!stored) return cloneLinkConfig(DEFAULT_LINK_CONFIG);
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed.categories)) return cloneLinkConfig(DEFAULT_LINK_CONFIG);
-    return cloneLinkConfig(parsed);
+    return mergeWithDefaults(parsed);
   } catch {
     return cloneLinkConfig(DEFAULT_LINK_CONFIG);
   }
@@ -260,19 +317,40 @@ function getStoredLinkConfig() {
 
 function cloneLinkConfig(config) {
   return {
+    shortcuts: (config.shortcuts || []).map(cloneLinkItem),
     categories: (config.categories || []).map((category) => ({
       id: category.id,
       label: category.label || "",
       description: category.description || "",
       iconKey: category.iconKey || "FileText",
-      items: (category.items || []).map((item) => ({
-        label: item.label || "",
-        description: item.description || "",
-        href: item.href || "",
-        iconKey: item.iconKey || "FileText",
-      })),
+      items: (category.items || []).map(cloneLinkItem),
     })),
   };
+}
+
+function cloneLinkItem(item) {
+  return {
+    label: item.label || "",
+    description: item.description || "",
+    href: item.href || "",
+    iconKey: item.iconKey || "FileText",
+  };
+}
+
+function mergeWithDefaults(config) {
+  const next = cloneLinkConfig({ ...config, shortcuts: config.shortcuts || [] });
+  DEFAULT_LINK_CONFIG.categories.forEach((defaultCategory) => {
+    const category = next.categories.find((entry) => entry.id === defaultCategory.id);
+    if (!category) {
+      next.categories.push(cloneLinkConfig({ categories: [defaultCategory] }).categories[0]);
+      return;
+    }
+    defaultCategory.items.forEach((defaultItem) => {
+      const hasItem = category.items.some((item) => item.href === defaultItem.href || item.label === defaultItem.label);
+      if (!hasItem) category.items.push(cloneLinkItem(defaultItem));
+    });
+  });
+  return next;
 }
 
 function emptyCategoryDraft() {
@@ -292,12 +370,17 @@ function categoryToDraft(index, category) {
 }
 
 function emptyLinkDraft(categoryId) {
-  return { mode: "add", categoryId, index: null, label: "", description: "", href: "", iconKey: "FileText" };
+  return { mode: "add", scope: "categoryItems", categoryId, index: null, label: "", description: "", href: "", iconKey: "FileText" };
 }
 
-function linkToDraft(categoryId, index, item) {
+function emptyShortcutDraft() {
+  return { mode: "add", scope: "shortcuts", categoryId: null, index: null, label: "", description: "", href: "", iconKey: "FileText" };
+}
+
+function linkToDraft(scope, categoryId, index, item) {
   return {
     mode: "edit",
+    scope,
     categoryId,
     index,
     label: item.label || "",

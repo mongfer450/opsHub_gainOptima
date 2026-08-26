@@ -84,6 +84,7 @@ export const defaultCategories = [
       { label: "ฟอร์มสมัคร MB", description: "สมัครสมาชิก MB", iconKey: "UserPlus", href: "https://docs.google.com/forms/d/e/1FAIpQLSdpAkyz7xEH185jI7OHEH19JIut2jWloa8dm44pIzGW0EgC6g/viewform" },
       { label: "ฟอร์มสมัคร PT", description: "สมัครแพ็กเกจ PT", iconKey: "Dumbbell", href: "https://docs.google.com/forms/d/e/1FAIpQLSePqvl8De-2pAWmY61xVLQX-R0iRjUifkd_uBU18p9b5VKU3g/viewform" },
       { label: "ฟอร์มเบิกเงิน", description: "แบบฟอร์มขอเบิกเงิน", iconKey: "Wallet", href: "https://docs.google.com/forms/d/e/1FAIpQLScxE2zxvT-EwHF1pKdNtKByBZk54ehqwNYMEbi_CFttiI9IFQ/viewform" },
+      { label: "บันทึกรายจ่าย", description: "ฟอร์มบันทึกรายจ่าย", iconKey: "Wallet", href: "https://docs.google.com/forms/d/e/1FAIpQLSfxy0U9FH1C7xgs52PK3dBB_9XRYm1dClmg1i6GvQcaS76zww/viewform" },
     ],
   },
   {
