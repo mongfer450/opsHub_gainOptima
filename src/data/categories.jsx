@@ -69,9 +69,10 @@ export const defaultCategories = [
     description: "ยอดขาย คอมมิชชั่น ค่าใช้จ่าย",
     iconKey: "TrendingUp",
     items: [
-      { label: "Gain Optima - Revenue", description: "ยอดวันนี้ + รายวันทั้งเดือน", iconKey: "TrendingUp", href: "https://docs.google.com/spreadsheets/d/11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4/edit" },
-      { label: "คำนวณค่าคอม_PT", description: "คอมมิชชั่น PT ต่อลูกค้า", iconKey: "TrendingUp", href: "https://docs.google.com/spreadsheets/d/1cI4VGPDGgv1vvqWy2Rrtv7fTbBygAi_l9eaAl78M8hs/edit" },
-      { label: "Expense Tracking", description: "เช็คลิสต์ค่าใช้จ่ายรายเดือน", iconKey: "Wallet", href: "https://docs.google.com/spreadsheets/d/13QUTSOoUkpCxTcgVsKu9RMXyT4PQQ-MhlByaWQXxIcg/edit" },
+      { label: "Revenue", description: "ยอดวันนี้ + รายวันทั้งเดือน", iconKey: "TrendingUp", href: "https://docs.google.com/spreadsheets/d/11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4/edit" },
+      { label: "ค่าคอม PT", description: "คอมมิชชั่น PT ต่อลูกค้า", iconKey: "TrendingUp", href: "https://docs.google.com/spreadsheets/d/1cI4VGPDGgv1vvqWy2Rrtv7fTbBygAi_l9eaAl78M8hs/edit" },
+      { label: "ค่าคอม MB", description: "คอมมิชชั่น MB", iconKey: "TrendingUp", href: "https://docs.google.com/spreadsheets/d/1rv8F2zCr1onlLPsDfQgIupn5Wc1AKVhne7E-krjg-JQ/edit?usp=share_link" },
+      { label: "Expense", description: "เช็คลิสต์ค่าใช้จ่ายรายเดือน", iconKey: "Wallet", href: "https://docs.google.com/spreadsheets/d/13QUTSOoUkpCxTcgVsKu9RMXyT4PQQ-MhlByaWQXxIcg/edit" },
       { label: "การเงิน", description: "เอกสาร/หลักฐานการเงินใน Drive", iconKey: "Folder", href: "https://drive.google.com/drive/u/0/folders/1k4mOVMmZyY-vMOtOc4nXRJzjftGQIgDh" },
     ],
   },
