@@ -1,8 +1,8 @@
-import { ListChecks, LogOut } from "lucide-react";
+import { ListChecks, LogOut, Settings } from "lucide-react";
 import { GAIN_LOGO, GYMMO_LOGO } from "../assets/logos";
 import { GOLD, GOLD_DARK } from "../config/constants";
 
-export function Header({ onLogout }) {
+export function Header({ onLogout, linkEditMode, onToggleLinkEditMode }) {
   return (
     <div
       style={{
@@ -39,24 +39,49 @@ export function Header({ onLogout }) {
               </div>
             </div>
           </div>
-          <button
-            onClick={onLogout}
-            className="tap"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              background: "#FFFFFF14",
-              border: "1px solid #FFFFFF2A",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            <LogOut size={14} color="#FFFFFF" />
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <button
+              type="button"
+              onClick={onToggleLinkEditMode}
+              className="tap headerManageButton"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                border: "1px solid #FFFFFF35",
+                background: linkEditMode ? "#FFFFFF" : "#FFFFFF18",
+                color: linkEditMode ? GOLD_DARK : "#FFFFFF",
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: "pointer",
+                fontFamily: "inherit",
+              }}
+              aria-label={linkEditMode ? "ปิดโหมดจัดการลิงก์" : "เปิดโหมดจัดการลิงก์"}
+            >
+              <Settings size={14} />
+              <span className="labelShort">{linkEditMode ? "เสร็จ" : "แก้"}</span>
+              <span className="labelFull">{linkEditMode ? "เสร็จ" : "จัดการลิงก์"}</span>
+            </button>
+            <button
+              onClick={onLogout}
+              className="tap"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                background: "#FFFFFF14",
+                border: "1px solid #FFFFFF2A",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <LogOut size={14} color="#FFFFFF" />
+            </button>
+          </div>
         </div>
 
         <div style={{ display: "flex", gap: 8, marginTop: 12 }}>

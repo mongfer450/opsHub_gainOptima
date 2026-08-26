@@ -96,6 +96,7 @@ function EmployeeLeaderboard({ employeeSales }) {
           const rank = i + 1;
           const total = (row.mb || 0) + (row.pt || 0);
           const remaining = row.target ? Math.max(0, row.target - (row.pt || 0)) : null;
+          const overTarget = row.target ? Math.max(0, (row.pt || 0) - row.target) : null;
           const medal =
             rank === 1
               ? { bg: "#FFF6DC", border: "#D4AF37", text: "#8A6D1D", label: "🥇" }
@@ -146,7 +147,7 @@ function EmployeeLeaderboard({ employeeSales }) {
                 </div>
                 {row.target && (
                   <div style={{ fontSize: 10.5, fontWeight: 700, color: remaining === 0 ? "#16A34A" : "#DC2626", marginTop: 3 }}>
-                    {remaining === 0 ? "≥ เป้า" : `< ${fmtBaht(remaining)}`}
+                    {remaining === 0 ? `> ${fmtBaht(overTarget)}` : `< ${fmtBaht(remaining)}`}
                   </div>
                 )}
               </div>

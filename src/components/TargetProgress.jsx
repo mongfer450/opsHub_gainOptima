@@ -23,6 +23,8 @@ export function TargetProgress({ monthSales, monthSalesLoading }) {
 
 function ProgressRow({ label, value, target, suffix }) {
   const pct = Math.min(100, Math.round((value / target) * 100));
+  const remaining = Math.max(0, target - value);
+  const overTarget = Math.max(0, value - target);
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
@@ -37,8 +39,8 @@ function ProgressRow({ label, value, target, suffix }) {
       <div style={{ height: 10, background: "#F0EEE8", borderRadius: 6, overflow: "hidden" }}>
         <div style={{ width: `${pct}%`, height: "100%", background: `linear-gradient(90deg, ${GOLD_DARK}, ${GOLD})`, borderRadius: 6 }} />
       </div>
-      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 6 }}>
-        ทำได้แล้ว {pct}% {suffix} · เหลืออีก {fmtBaht(Math.max(0, target - value))}
+      <div style={{ fontSize: 11, color: remaining === 0 && overTarget > 0 ? "#16A34A" : "#9CA3AF", marginTop: 6 }}>
+        ทำได้แล้ว {pct}% {suffix} · {remaining === 0 && overTarget > 0 ? `> ${fmtBaht(overTarget)}` : `เหลืออีก ${fmtBaht(remaining)}`}
       </div>
     </>
   );

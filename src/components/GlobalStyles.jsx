@@ -16,11 +16,17 @@ export function GlobalStyles() {
       .attendanceChip { display: flex; align-items: baseline; justify-content: center; gap: 5px; background: #FFFFFF; border: 1px solid #ECE9E1; border-radius: 10px; padding: 8px 6px; min-width: 0; }
       .iconCard { padding: 14px 8px 12px; }
       .iconCardIcon { width: 38px; height: 38px; }
+      .headerManageButton { padding: 8px 9px; border-radius: 12px; }
+      .labelFull { display: none; }
+      .labelShort { display: inline; }
 
       @media (min-width: 640px) {
         .avatar { width: 40px; height: 40px; }
         .titleBrand { font-size: 12px; }
         .titleMain { font-size: 16px; }
+        .headerManageButton { padding: 9px 12px; }
+        .labelFull { display: inline; }
+        .labelShort { display: none; }
       }
 
       @media (min-width: 720px) {

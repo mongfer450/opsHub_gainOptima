@@ -49,6 +49,7 @@ function usePollingResource(loader, onSuccess, onError, onSettled, intervalMs = 
 export default function OpsHubOwnerConsole() {
   const [unlocked, setUnlocked] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [linkEditMode, setLinkEditMode] = useState(false);
 
   const [attendanceToday, setAttendanceToday] = useState([]);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
@@ -115,7 +116,11 @@ export default function OpsHubOwnerConsole() {
       }}
     >
       <GlobalStyles />
-      <Header onLogout={() => setUnlocked(false)} />
+      <Header
+        onLogout={() => setUnlocked(false)}
+        linkEditMode={linkEditMode}
+        onToggleLinkEditMode={() => setLinkEditMode((enabled) => !enabled)}
+      />
       <SalesOverview
         monthSales={monthSales}
         monthSalesLoading={monthSalesLoading}
@@ -130,6 +135,7 @@ export default function OpsHubOwnerConsole() {
       <AttendanceSection attendanceToday={attendanceToday} loading={attendanceLoading} />
       <CategoryLinksSection
         activeCategory={activeCategory}
+        linkEditMode={linkEditMode}
         onSelectCategory={setActiveCategory}
         onBack={() => setActiveCategory(null)}
       />
