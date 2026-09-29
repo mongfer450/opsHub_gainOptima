@@ -1,24 +1,20 @@
 import { useEffect, useState } from "react";
 import { AttendanceSection } from "./components/AttendanceSection";
-import { CategoryLinksSection } from "./components/CategoryLinksSection";
 import { GlobalStyles } from "./components/GlobalStyles";
 import { Header } from "./components/Header";
-import { LoginGate } from "./components/LoginGate";
 import { MemberPackagesSection } from "./components/MemberPackagesSection";
 import { SalesOverview } from "./components/SalesOverview";
-import { TargetProgress } from "./components/TargetProgress";
+import { ShortcutSection } from "./components/ShortcutSection";
 import {
-  fetchEmployeeSales,
-  fetchMemberPackages,
-  fetchMonthSales,
+  fetchSalesDashboard,
   fetchTodayAttendance,
-  fetchTodaySales,
 } from "./services/sheets";
+import { fetchShortcuts } from "./services/shortcuts";
 
 const EMPTY_SALES = { mb: 0, pt: 0, club: 0 };
 const EMPTY_PACKAGES = {
-  mb: { newCount: 0, renewCount: 0, otherCount: 0 },
-  pt: { newCount: 0, renewCount: 0, otherCount: 0 },
+  mb: {},
+  pt: {},
 };
 
 function usePollingResource(loader, onSuccess, onError, onSettled, intervalMs = 60000) {
@@ -30,7 +26,7 @@ function usePollingResource(loader, onSuccess, onError, onSettled, intervalMs = 
         const result = await loader();
         if (!cancelled) onSuccess(result);
       } catch (error) {
-        onError(error);
+        if (!cancelled) onError(error);
       } finally {
         if (!cancelled) onSettled();
       }
@@ -47,63 +43,62 @@ function usePollingResource(loader, onSuccess, onError, onSettled, intervalMs = 
 }
 
 export default function OpsHubOwnerConsole() {
-  const [unlocked, setUnlocked] = useState(false);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [linkEditMode, setLinkEditMode] = useState(false);
-
   const [attendanceToday, setAttendanceToday] = useState([]);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
+  const [attendanceError, setAttendanceError] = useState("");
+  const [shortcuts, setShortcuts] = useState([]);
+  const [shortcutsLoading, setShortcutsLoading] = useState(true);
+  const [shortcutsError, setShortcutsError] = useState("");
 
   const [employeeSales, setEmployeeSales] = useState([]);
   const [showEmployeeDetail, setShowEmployeeDetail] = useState(false);
-
   const [todaySales, setTodaySales] = useState(EMPTY_SALES);
-  const [todaySalesLoading, setTodaySalesLoading] = useState(true);
-
   const [monthSales, setMonthSales] = useState(EMPTY_SALES);
-  const [monthSalesLoading, setMonthSalesLoading] = useState(true);
-
   const [memberPackages, setMemberPackages] = useState(EMPTY_PACKAGES);
-  const [memberPackagesLoading, setMemberPackagesLoading] = useState(true);
+  const [salesLoading, setSalesLoading] = useState(true);
+  const [salesError, setSalesError] = useState("");
 
   usePollingResource(
-    fetchTodaySales,
-    setTodaySales,
-    (error) => console.error("โหลดยอดขายวันนี้ไม่สำเร็จ", error),
-    () => setTodaySalesLoading(false)
-  );
-
-  usePollingResource(
-    fetchMonthSales,
-    setMonthSales,
-    (error) => console.error("โหลดยอดขายเดือนนี้ไม่สำเร็จ", error),
-    () => setMonthSalesLoading(false)
-  );
-
-  usePollingResource(
-    fetchMemberPackages,
-    setMemberPackages,
-    (error) => console.error("โหลดข้อมูลสมาชิกซื้อแพ็กเกจไม่สำเร็จ", error),
-    () => setMemberPackagesLoading(false)
+    fetchSalesDashboard,
+    (dashboard) => {
+      setMonthSales(dashboard.monthSales);
+      setTodaySales(dashboard.todaySales);
+      setMemberPackages(dashboard.memberPackages);
+      setEmployeeSales(dashboard.employeeSales);
+      setSalesError("");
+    },
+    (error) => {
+      setSalesError(error.message || "โหลดข้อมูลยอดขายไม่สำเร็จ");
+      setMonthSales(EMPTY_SALES);
+      setTodaySales(EMPTY_SALES);
+      setMemberPackages(EMPTY_PACKAGES);
+      setEmployeeSales([]);
+    },
+    () => setSalesLoading(false)
   );
 
   usePollingResource(
     fetchTodayAttendance,
-    setAttendanceToday,
-    (error) => console.error("โหลดรายการเข้างานวันนี้ไม่สำเร็จ", error),
+    (rows) => {
+      setAttendanceToday(rows);
+      setAttendanceError("");
+    },
+    (error) => {
+      setAttendanceToday([]);
+      setAttendanceError(error.message || "โหลดรายการเข้างานไม่สำเร็จ");
+    },
     () => setAttendanceLoading(false)
   );
 
   usePollingResource(
-    fetchEmployeeSales,
-    setEmployeeSales,
-    (error) => console.error("โหลดยอดขายพนักงานไม่สำเร็จ", error),
-    () => {}
+    fetchShortcuts,
+    (items) => {
+      setShortcuts(items);
+      setShortcutsError("");
+    },
+    (error) => setShortcutsError(error.message || "โหลดทางลัดไม่สำเร็จ"),
+    () => setShortcutsLoading(false)
   );
-
-  if (!unlocked) {
-    return <LoginGate onUnlock={() => setUnlocked(true)} />;
-  }
 
   return (
     <div
@@ -116,28 +111,27 @@ export default function OpsHubOwnerConsole() {
       }}
     >
       <GlobalStyles />
-      <Header
-        onLogout={() => setUnlocked(false)}
-        linkEditMode={linkEditMode}
-        onToggleLinkEditMode={() => setLinkEditMode((enabled) => !enabled)}
-      />
+      <Header shortcuts={shortcuts} />
       <SalesOverview
         monthSales={monthSales}
-        monthSalesLoading={monthSalesLoading}
+        monthSalesLoading={salesLoading}
         todaySales={todaySales}
-        todaySalesLoading={todaySalesLoading}
+        todaySalesLoading={salesLoading}
         employeeSales={employeeSales}
+        error={salesError}
         showEmployeeDetail={showEmployeeDetail}
         onToggleEmployeeDetail={() => setShowEmployeeDetail((visible) => !visible)}
       />
-      <TargetProgress monthSales={monthSales} monthSalesLoading={monthSalesLoading} />
-      <MemberPackagesSection memberPackages={memberPackages} loading={memberPackagesLoading} />
-      <AttendanceSection attendanceToday={attendanceToday} loading={attendanceLoading} />
-      <CategoryLinksSection
-        activeCategory={activeCategory}
-        linkEditMode={linkEditMode}
-        onSelectCategory={setActiveCategory}
-        onBack={() => setActiveCategory(null)}
+      {!salesError && <MemberPackagesSection memberPackages={memberPackages} loading={salesLoading} />}
+      <AttendanceSection attendanceToday={attendanceToday} loading={attendanceLoading} error={attendanceError} />
+      <ShortcutSection
+        shortcuts={shortcuts}
+        loading={shortcutsLoading}
+        error={shortcutsError}
+        onChanged={(items) => {
+          setShortcuts(items);
+          setShortcutsError("");
+        }}
       />
     </div>
   );

@@ -18,6 +18,10 @@ export function fmtTime(d) {
 const THAI_MONTHS_SHORT = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 
 export function fmtThaiDate(d) {
-  const buddhistYear = d.getFullYear() + 543;
-  return `${d.getDate()} ${THAI_MONTHS_SHORT[d.getMonth()]} ${buddhistYear}`;
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric", month: "numeric", day: "numeric" })
+      .formatToParts(d)
+      .map(({ type, value }) => [type, value])
+  );
+  return `${parts.day} ${THAI_MONTHS_SHORT[Number(parts.month) - 1]} ${Number(parts.year) + 543}`;
 }

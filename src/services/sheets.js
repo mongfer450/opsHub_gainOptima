@@ -1,116 +1,64 @@
-import { ATTENDANCE_SHEET_ID, ATTENDANCE_SHEET_TAB, REVENUE_SHEET_ID } from "../config/constants";
+import { ATTENDANCE_SHEET_ID, ATTENDANCE_SHEET_GID, SALES_SHEET_ID, SALES_SHEET_GID } from "../config/constants";
 import { parseGvizDate } from "../utils/formatters";
+import { summarizeSales } from "../utils/sales";
+
+function parseGvizResponse(text) {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start < 0 || end < start) throw new Error("รูปแบบข้อมูลจาก Google Sheets ไม่ถูกต้อง");
+  const response = JSON.parse(text.slice(start, end + 1));
+  if (response.status !== "ok") throw new Error(response.errors?.[0]?.message || "อ่าน Google Sheets ไม่สำเร็จ");
+  return response.table?.rows || [];
+}
+
+async function fetchGviz(url) {
+  const response = await fetch(url, { cache: "no-store" });
+  if (response.status === 401 || response.status === 403) {
+    throw new Error("ชีตยังไม่อนุญาตให้เว็บแอปอ่านข้อมูล");
+  }
+  if (!response.ok) throw new Error(`Google Sheets ตอบกลับ ${response.status}`);
+  return parseGvizResponse(await response.text());
+}
+
+export async function fetchSalesDashboard(now = new Date()) {
+  const url = `https://docs.google.com/spreadsheets/d/${SALES_SHEET_ID}/gviz/tq?tqx=out:json&gid=${SALES_SHEET_GID}&tq=${encodeURIComponent("select A,B,E,F,H,I")}`;
+  const rows = await fetchGviz(url);
+  const records = rows.map(({ c = [] }) => ({
+    date: parseGvizDate(c[0]?.v),
+    type: c[1]?.v,
+    price: c[2]?.v,
+    adjustedPrice: c[3]?.v,
+    customerType: c[4]?.v,
+    employee: c[5]?.v,
+  }));
+  return summarizeSales(records, now);
+}
 
 export async function fetchTodayAttendance() {
-  const sheetName = encodeURIComponent(ATTENDANCE_SHEET_TAB);
-  const url = `https://docs.google.com/spreadsheets/d/${ATTENDANCE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}&range=A2:B`;
-  const res = await fetch(url);
-  const text = await res.text();
-  const jsonStart = text.indexOf("{");
-  const jsonEnd = text.lastIndexOf("}");
-  const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
-  const rows = (json.table && json.table.rows) || [];
-  const today = new Date();
-
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", { timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit" })
+      .formatToParts(new Date())
+      .map(({ type, value }) => [type, value])
+  );
+  const year = Number(parts.year);
+  const month = Number(parts.month);
+  const day = Number(parts.day);
+  const start = `${year}-${parts.month}-${parts.day}`;
+  const nextDate = new Date(Date.UTC(year, month - 1, day + 1));
+  const end = `${nextDate.getUTCFullYear()}-${String(nextDate.getUTCMonth() + 1).padStart(2, "0")}-${String(nextDate.getUTCDate()).padStart(2, "0")}`;
+  const query = `select A,B where A >= datetime '${start} 00:00:00' and A < datetime '${end} 00:00:00' order by A`;
+  const url = `https://docs.google.com/spreadsheets/d/${ATTENDANCE_SHEET_ID}/gviz/tq?tqx=out:json&gid=${ATTENDANCE_SHEET_GID}&tq=${encodeURIComponent(query)}`;
+  let rows;
+  try {
+    rows = await fetchGviz(url);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("เว็บอ่านชีตเช็คชื่อไม่ได้ กรุณาตรวจสิทธิ์การแชร์ชีต");
+    }
+    throw error;
+  }
   return rows
-    .map((r) => {
-      const timeCell = r.c && r.c[0];
-      const nameCell = r.c && r.c[1];
-      const date = timeCell ? parseGvizDate(timeCell.v) : null;
-      const name = nameCell ? nameCell.v : null;
-      return { date, name };
-    })
-    .filter(
-      (item) =>
-        item.date &&
-        item.name &&
-        item.date.getFullYear() === today.getFullYear() &&
-        item.date.getMonth() === today.getMonth() &&
-        item.date.getDate() === today.getDate()
-    )
+    .map((row) => ({ date: parseGvizDate(row.c?.[0]?.v), name: row.c?.[1]?.v }))
+    .filter((item) => item.date && item.name && item.date.getFullYear() === year && item.date.getMonth() + 1 === month && item.date.getDate() === day)
     .sort((a, b) => a.date - b.date);
-}
-
-async function gvizQuery(tq) {
-  const sheetName = encodeURIComponent("DATA");
-  const url = `https://docs.google.com/spreadsheets/d/${REVENUE_SHEET_ID}/gviz/tq?tqx=out:json&sheet=${sheetName}&tq=${encodeURIComponent(tq)}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  const jsonStart = text.indexOf("{");
-  const jsonEnd = text.lastIndexOf("}");
-  const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
-  const rows = (json.table && json.table.rows) || [];
-  return rows.map((r) => ({ label: r.c?.[0]?.v ?? null, value: r.c?.[1]?.v ?? 0 }));
-}
-
-export async function fetchEmployeeSales() {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  const [mbRows, ptRows] = await Promise.all([
-    gvizQuery(`SELECT K, SUM(I) WHERE E = 'MB' AND C = ${month} AND D = ${year} GROUP BY K`),
-    gvizQuery(`SELECT K, SUM(I) WHERE E = 'PT' AND C = ${month} AND D = ${year} GROUP BY K`),
-  ]);
-  const map = {};
-  mbRows.forEach((r) => {
-    if (!r.label) return;
-    map[r.label] = map[r.label] || { mb: 0, pt: 0 };
-    map[r.label].mb = r.value;
-  });
-  ptRows.forEach((r) => {
-    if (!r.label) return;
-    map[r.label] = map[r.label] || { mb: 0, pt: 0 };
-    map[r.label].pt = r.value;
-  });
-  return Object.entries(map)
-    .map(([name, v]) => ({ name, mb: v.mb, pt: v.pt }))
-    .sort((a, b) => b.pt - a.pt);
-}
-
-export async function fetchTodaySales() {
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const rows = await gvizQuery(`SELECT E, SUM(I) WHERE B = date '${dateStr}' GROUP BY E`);
-  let mb = 0;
-  let pt = 0;
-  rows.forEach((r) => {
-    if (r.label === "MB") mb = r.value;
-    if (r.label === "PT") pt = r.value;
-  });
-  return { mb, pt, club: mb + pt };
-}
-
-export async function fetchMonthSales() {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  const rows = await gvizQuery(`SELECT E, SUM(I) WHERE C = ${month} AND D = ${year} GROUP BY E`);
-  let mb = 0;
-  let pt = 0;
-  rows.forEach((r) => {
-    if (r.label === "MB") mb = r.value;
-    if (r.label === "PT") pt = r.value;
-  });
-  return { mb, pt, club: mb + pt };
-}
-
-export async function fetchMemberPackages() {
-  const now = new Date();
-  const month = now.getMonth() + 1;
-  const year = now.getFullYear();
-  const [mbRows, ptRows] = await Promise.all([
-    gvizQuery(`SELECT L, COUNT(A) WHERE E = 'MB' AND C = ${month} AND D = ${year} GROUP BY L`),
-    gvizQuery(`SELECT L, COUNT(A) WHERE E = 'PT' AND C = ${month} AND D = ${year} GROUP BY L`),
-  ]);
-  const parse = (rows) => {
-    const out = { newCount: 0, renewCount: 0, otherCount: 0 };
-    rows.forEach((r) => {
-      const label = (r.label || "").trim().toLowerCase();
-      if (label === "new") out.newCount = r.value;
-      else if (label === "renew") out.renewCount = r.value;
-      else out.otherCount += r.value;
-    });
-    return out;
-  };
-  return { mb: parse(mbRows), pt: parse(ptRows) };
 }
