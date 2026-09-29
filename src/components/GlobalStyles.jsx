@@ -12,21 +12,19 @@ export function GlobalStyles() {
       .titleMain { font-size: 13px; }
       .sectionTitle { font-size: 14px; }
       .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .targetInputs { display: grid; grid-template-columns: 1fr; gap: 12px; }
+      .shortcutFormGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .targetRow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
       .attendanceGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
       .attendanceChip { display: flex; align-items: baseline; justify-content: center; gap: 5px; background: #FFFFFF; border: 1px solid #ECE9E1; border-radius: 10px; padding: 8px 6px; min-width: 0; }
       .iconCard { padding: 14px 8px 12px; }
       .iconCardIcon { width: 38px; height: 38px; }
-      .headerManageButton { padding: 8px 9px; border-radius: 12px; }
-      .labelFull { display: none; }
-      .labelShort { display: inline; }
 
       @media (min-width: 640px) {
+        .targetInputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .avatar { width: 40px; height: 40px; }
         .titleBrand { font-size: 12px; }
         .titleMain { font-size: 16px; }
-        .headerManageButton { padding: 9px 12px; }
-        .labelFull { display: inline; }
-        .labelShort { display: none; }
       }
 
       @media (min-width: 720px) {

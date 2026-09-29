@@ -1,29 +1,52 @@
-# Gain Optima — Owner Console
+# Gain Optima Ops Hub
 
-เวอร์ชันสำหรับเจ้าของ/แอดมิน — หน้าแรกเป็นการ์ดหมวดหมู่ (ไอคอน+คำอธิบายสั้นๆ) กดเข้าไปแล้วเห็นการ์ดลิงก์แต่ละระบบในหมวดนั้น (ไอคอน+คำอธิบายสั้นๆ เหมือนกัน) มี real-time dashboard ยอดขายคลับ/ทีม PT ที่ header ด้วย
+Dashboard ยอดขายจากแท็บ `DATA2` พร้อมทางลัดที่อ่านจาก Google Sheets
 
-## วิธี Deploy บน GitHub Pages
+## เริ่มใช้งาน
 
-### 1. สร้าง Repository ใหม่บน GitHub
-- ไปที่ https://github.com/new
-- ตั้งชื่อ repo เช่น `gain-optima-owner-console`
-- เลือก Public
-- ไม่ต้องติ๊ก "Add README"
+```bash
+npm ci
+npm run dev
+```
 
-### 2. อัปโหลดไฟล์ทั้งหมดในโฟลเดอร์นี้ขึ้น repo
-- เปิดหน้า repo → **Add file → Upload files**
-- ลากไฟล์/โฟลเดอร์ทั้งหมด (`package.json`, `vite.config.js`, `index.html`, `src/`, `.github/`) เข้าไป
-- **สำคัญ**: เช็คว่ามีไฟล์ `.github/workflows/deploy.yml` ติดขึ้นไปด้วย (โฟลเดอร์ที่ขึ้นต้นด้วยจุดมักถูกซ่อนตอนลากอัปโหลดจาก Mac) — ถ้าไม่มีให้สร้างเองผ่าน **Add file → Create new file** แล้วพิมพ์ path เต็มว่า `.github/workflows/deploy.yml`
-- กด Commit
+## ข้อมูล Dashboard
 
-### 3. เปิดใช้งาน GitHub Pages
-- ไปที่ repo → **Settings → Pages**
-- Source เลือก **GitHub Actions**
+- แหล่งยอดขาย: [Gain Optima — Revenue / DATA2](https://docs.google.com/spreadsheets/d/11JY-u1njafkk_zIQSX4N-FQIRvvXGoTwR9MWkNkT3s4/edit?gid=755413768)
+- อ่านผ่าน Google Visualization API ทุก 60 วินาที โดยไม่ต้องมี backend
+- ใช้เวลาในคอลัมน์ A, ประเภท MB/PT ใน B, ราคา E และยอดแก้ไข F (ถ้ามี) สำหรับยอดเดือนนี้และวันนี้
+- ประเภทลูกค้า H สำหรับจำนวนตามประเภทจริง และพนักงาน I สำหรับรายละเอียดพนักงาน
+- การเข้างานยังใช้แหล่งเดิม
 
-### 4. รอ 1-2 นาที เช็คแท็บ Actions
-- ต้องขึ้นเครื่องหมายถูกเขียว ✅
-- เว็บจะขึ้นที่: `https://<your-username>.github.io/gain-optima-owner-console/`
+## ทางลัด
 
-## หมายเหตุ
-- Real-time dashboard (ยอดขายคลับ/ทีม PT) ต้องให้ Sheet "Gain Optima — Revenue" แชร์เป็น **Anyone with the link — Viewer** ไม่งั้นจะขึ้น "—"
-- แก้ไฟล์ `src/App.jsx` แล้ว commit ใหม่ — GitHub Actions จะ build ให้อัตโนมัติ
+- ข้อมูลอยู่ใน [Gain Optima Ops Hub Shortcuts](https://docs.google.com/spreadsheets/d/1vFQAZLiQtGnEgiacK3zE48qNyrFD70Y16Kb3639Lt4g/edit?gid=1236504074) แท็บ `Shortcuts`
+- หน้าเว็บอ่านชีตทุก 60 วินาทีผ่าน Google Visualization API จึงต้องแชร์ชีตเป็น “ทุกคนที่มีลิงก์: ผู้ดู”
+- ทุกลิงก์เปิดแท็บใหม่ ไม่มีหมวดและไม่มีการเก็บลิงก์ใน localStorage
+- `Placement` เป็น `header` หรือ `list`; `Enabled` ควบคุมการแสดงผล
+
+### เปิดการแก้ไขลิงก์บนเว็บ
+
+1. เปิดชีต Shortcuts ด้วยบัญชีเจ้าของ แล้วไปที่ **ส่วนขยาย → Apps Script**
+2. วางโค้ดจาก `ShortcutConfig.gs` ลงในไฟล์ `Code.gs` แล้วบันทึก
+3. ไปที่ **การตั้งค่าโปรเจกต์ → Script properties** เพิ่ม `SHORTCUT_ADMIN_TOKEN` เป็นรหัสสุ่มยาวอย่างน้อย 20 ตัวอักษร เก็บรหัสนี้ไว้กับเจ้าของ ไม่ใส่ลงในซอร์สโค้ด
+4. **Deploy → New deployment → Web app** เลือก **Execute as: Me** และ **Who has access: Anyone** แล้วอนุญาตสิทธิ์ที่ Google ขอ
+5. สำหรับพรีวิวในเครื่อง ใส่ URL ที่ลงท้าย `/exec` ในไฟล์ `.env.local` เป็น `VITE_SHORTCUTS_WEB_APP_URL=<URL>` แล้วเริ่ม dev server หรือ build ใหม่
+6. สำหรับ GitHub Pages ตั้ง Actions variable ชื่อ `SHORTCUTS_WEB_APP_URL` เป็น URL เดียวกัน แล้วรัน workflow deploy ใหม่
+
+ปุ่มจัดการลิงก์ในหน้าเว็บต้องใช้รหัสผู้ดูแลทุกครั้งที่เปิดหน้าใหม่ รหัสไม่ถูกบันทึกใน localStorage
+
+## การเข้างาน
+
+- อ่านจากชีต [เช็คชื่อทำงาน_DB](https://docs.google.com/spreadsheets/d/1xH5kKeXAqNaEZzheWAFZEKdQHbsMi55AipuoTkn_PoY/edit?gid=123735032) ทุก 60 วินาที
+- ใช้แท็บ `gid=123735032` และคอลัมน์ A (เวลาเช็คชื่อ), B (ชื่อพนักงาน)
+- ดึงเฉพาะรายการของวันปัจจุบันตามเวลาไทย จึงไม่ต้องโหลดประวัติทั้งหมดเมื่อชีตโตขึ้น
+- ชีตต้องตั้งการเข้าถึงทั่วไปเป็น “ทุกคนที่มีลิงก์: ผู้ดู” เพื่อให้เว็บแอปที่ไม่มีระบบล็อกอินอ่านผ่าน Google Visualization API ได้
+- หากสิทธิ์หายหรือชีตอ่านไม่ได้ หน้าจอจะแสดงข้อผิดพลาดแทนข้อความ “ยังไม่มีใครเช็คอินวันนี้”
+
+ชีตต้องเปิดสิทธิ์อ่านให้ผู้ใช้เว็บแอปเข้าถึงได้ หากอ่านไม่ได้ Dashboard จะแสดงข้อผิดพลาด
+
+## Build
+
+```bash
+npm run build
+```

@@ -1,8 +1,9 @@
-import { ListChecks, LogOut, Settings } from "lucide-react";
-import { GAIN_LOGO, GYMMO_LOGO } from "../assets/logos";
+import { GAIN_LOGO } from "../assets/logos";
 import { GOLD, GOLD_DARK } from "../config/constants";
+import { ShortcutIcon } from "./ShortcutIcon";
 
-export function Header({ onLogout, linkEditMode, onToggleLinkEditMode }) {
+export function Header({ shortcuts = [] }) {
+  const headerShortcuts = shortcuts.filter((item) => item.enabled && item.placement === "header");
   return (
     <div
       style={{
@@ -39,100 +40,22 @@ export function Header({ onLogout, linkEditMode, onToggleLinkEditMode }) {
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <button
-              type="button"
-              onClick={onToggleLinkEditMode}
-              className="tap headerManageButton"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                border: "1px solid #FFFFFF35",
-                background: linkEditMode ? "#FFFFFF" : "#FFFFFF18",
-                color: linkEditMode ? GOLD_DARK : "#FFFFFF",
-                fontWeight: 700,
-                fontSize: 12,
-                cursor: "pointer",
-                fontFamily: "inherit",
-              }}
-              aria-label={linkEditMode ? "ปิดโหมดจัดการลิงก์" : "เปิดโหมดจัดการลิงก์"}
-            >
-              <Settings size={14} />
-              <span className="labelShort">{linkEditMode ? "เสร็จ" : "แก้"}</span>
-              <span className="labelFull">{linkEditMode ? "เสร็จ" : "จัดการลิงก์"}</span>
-            </button>
-            <button
-              onClick={onLogout}
-              className="tap"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 30,
-                height: 30,
-                borderRadius: "50%",
-                background: "#FFFFFF14",
-                border: "1px solid #FFFFFF2A",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
-            >
-              <LogOut size={14} color="#FFFFFF" />
-            </button>
-          </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          <HeaderLink href="https://console.gymmo.app/th">
-            <div
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                background: "#FFFFFF",
-                border: "1px solid #ECE9E1",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                overflow: "hidden",
-                padding: 2,
-              }}
-            >
-              <img src={GYMMO_LOGO} alt="Gymmo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>Gymmo Console</span>
-          </HeaderLink>
-          <HeaderLink href="https://docs.google.com/spreadsheets/d/11yqqQhfpjiDm_Trp9_8mhmP-kOXz7XrN7SZab4HL5sQ/edit?gid=1870528920#gid=1870528920">
-            <div
-              style={{
-                width: 22,
-                height: 22,
-                borderRadius: "50%",
-                background: `${GOLD}1A`,
-                border: "1px solid #ECE9E1",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <ListChecks size={13} color={GOLD_DARK} />
-            </div>
-            <span style={{ fontSize: 12, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>Task Tracker</span>
-          </HeaderLink>
-        </div>
+        {headerShortcuts.length > 0 && (
+          <div style={{ display: "flex", gap: 8, marginTop: 12, overflowX: "auto" }}>
+            {headerShortcuts.map((item) => <HeaderLink key={item.id} shortcut={item} />)}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function HeaderLink({ href, children }) {
+function HeaderLink({ shortcut }) {
   return (
     <a
-      href={href}
+      href={shortcut.url}
       target="_blank"
       rel="noopener noreferrer"
       className="tap"
@@ -141,14 +64,15 @@ function HeaderLink({ href, children }) {
         alignItems: "center",
         justifyContent: "center",
         gap: 7,
-        flex: 1,
+        flex: "1 0 150px",
         textDecoration: "none",
         background: "#FFFFFF",
         borderRadius: 12,
         padding: "6px 10px",
       }}
     >
-      {children}
+      <ShortcutIcon name={shortcut.icon} size={16} />
+      <span style={{ fontSize: 12, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>{shortcut.label}</span>
     </a>
   );
 }

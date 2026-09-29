@@ -1,6 +1,6 @@
 import { fmtThaiDate, fmtTime } from "../utils/formatters";
 
-export function AttendanceSection({ attendanceToday, loading }) {
+export function AttendanceSection({ attendanceToday, loading, error }) {
   return (
     <div className="wrap" style={{ marginTop: 20 }}>
       <div className="sectionTitle" style={{ fontWeight: 700, marginBottom: 10 }}>
@@ -9,6 +9,10 @@ export function AttendanceSection({ attendanceToday, loading }) {
       {loading ? (
         <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
           กำลังโหลด...
+        </div>
+      ) : error ? (
+        <div role="alert" style={{ padding: 16, fontSize: 12.5, color: "#A62B2B", background: "#FFF1F0", border: "1px solid #F5C7C3", borderRadius: 8 }}>
+          อ่านข้อมูลการเข้างานไม่สำเร็จ: {error}
         </div>
       ) : attendanceToday.length === 0 ? (
         <div style={{ padding: 16, fontSize: 12.5, color: "#9CA3AF", background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>

@@ -10,22 +10,10 @@ export function MemberPackagesSection({ memberPackages, loading }) {
           กำลังโหลด...
         </div>
       ) : (
-        <>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <PackageCard title="MB" icon={UserPlus} data={memberPackages.mb} />
-            <PackageCard title="PT" icon={Dumbbell} data={memberPackages.pt} />
-          </div>
-          {memberPackages.mb.otherCount > 0 && (
-            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 8 }}>
-              * MB มี {memberPackages.mb.otherCount} รายการที่ยังไม่ระบุ New/Renew - ตัวเลขด้านบนอาจไม่ครบ
-            </div>
-          )}
-          {memberPackages.pt.otherCount > 0 && (
-            <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 4 }}>
-              * PT มี {memberPackages.pt.otherCount} รายการที่ยังไม่ระบุ New/Renew - ตัวเลขด้านบนอาจไม่ครบ
-            </div>
-          )}
-        </>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+          <PackageCard title="MB" icon={UserPlus} data={memberPackages.mb} />
+          <PackageCard title="PT" icon={Dumbbell} data={memberPackages.pt} />
+        </div>
       )}
     </div>
   );
@@ -40,14 +28,16 @@ function PackageCard({ title, icon: Icon, data }) {
         </div>
         <span style={{ fontSize: 12.5, fontWeight: 700 }}>{title}</span>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-        <span style={{ fontSize: 11, color: "#9CA3AF" }}>สมัครใหม่</span>
-        <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#16A34A" }}>{data.newCount}</span>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span style={{ fontSize: 11, color: "#9CA3AF" }}>ต่ออายุ</span>
-        <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif" }}>{data.renewCount}</span>
-      </div>
+      {Object.entries(data).length === 0 ? (
+        <div style={{ fontSize: 11, color: "#9CA3AF" }}>ยังไม่มีข้อมูล</div>
+      ) : (
+        Object.entries(data).map(([customerType, count]) => (
+          <div key={customerType} style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
+            <span style={{ minWidth: 0, overflowWrap: "anywhere", fontSize: 11, color: "#9CA3AF" }}>{customerType}</span>
+            <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 700, fontFamily: "'Space Grotesk', sans-serif", color: "#111318" }}>{count}</span>
+          </div>
+        ))
+      )}
     </div>
   );
 }
