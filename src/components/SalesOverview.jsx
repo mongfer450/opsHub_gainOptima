@@ -1,24 +1,24 @@
+import { useState } from "react";
 import { EmployeeLeaderboard } from "./EmployeeLeaderboard";
 import { SalesMetricCards } from "./SalesMetricCards";
 import { TargetProgress } from "./TargetProgress";
+import { TodaySalesDialog } from "./TodaySalesDialog";
 
 export function SalesOverview({
   monthSales,
   monthSalesLoading,
   todaySales,
+  todayTransactions,
   todaySalesLoading,
   employeeSales,
   error,
   showEmployeeDetail,
   onToggleEmployeeDetail,
 }) {
+  const [selectedSalesType, setSelectedSalesType] = useState(null);
+
   return (
     <div className="wrap" style={{ marginTop: 20 }}>
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10 }}>
-        <div className="sectionTitle" style={{ fontWeight: 700 }}>ยอดขาย</div>
-        <div style={{ fontSize: 10, color: "#9CA3AF" }}>เดือนนี้ / วันนี้</div>
-      </div>
-
       {error && (
         <div role="alert" style={{ padding: 12, marginBottom: 10, color: "#A62B2B", background: "#FFF1F0", border: "1px solid #F5C7C3", borderRadius: 8, fontSize: 12 }}>
           อ่านข้อมูลยอดขายไม่สำเร็จ: {error}
@@ -30,8 +30,8 @@ export function SalesOverview({
         </div>
       ) : (
         <>
+          <SalesMetricCards monthSales={monthSales} todaySales={todaySales} todaySalesLoading={todaySalesLoading} onSelect={setSelectedSalesType} />
           <TargetProgress monthSales={monthSales} />
-          <SalesMetricCards monthSales={monthSales} todaySales={todaySales} todaySalesLoading={todaySalesLoading} />
 
           <button
             onClick={onToggleEmployeeDetail}
@@ -52,6 +52,14 @@ export function SalesOverview({
             {showEmployeeDetail ? "ซ่อนรายละเอียดพนักงาน ▲" : "ดูรายละเอียดพนักงาน ▼"}
           </button>
           {showEmployeeDetail && <EmployeeLeaderboard employeeSales={employeeSales} />}
+          {selectedSalesType && (
+            <TodaySalesDialog
+              type={selectedSalesType}
+              transactions={todayTransactions.filter((item) => item.type === selectedSalesType)}
+              total={todaySales[selectedSalesType.toLowerCase()]}
+              onClose={() => setSelectedSalesType(null)}
+            />
+          )}
         </>
       )}
     </div>

@@ -21,15 +21,16 @@ async function fetchGviz(url) {
 }
 
 export async function fetchSalesDashboard(now = new Date()) {
-  const url = `https://docs.google.com/spreadsheets/d/${SALES_SHEET_ID}/gviz/tq?tqx=out:json&gid=${SALES_SHEET_GID}&tq=${encodeURIComponent("select A,B,E,F,H,I")}`;
+  const url = `https://docs.google.com/spreadsheets/d/${SALES_SHEET_ID}/gviz/tq?tqx=out:json&gid=${SALES_SHEET_GID}&tq=${encodeURIComponent("select A,B,D,E,F,H,I")}`;
   const rows = await fetchGviz(url);
   const records = rows.map(({ c = [] }) => ({
     date: parseGvizDate(c[0]?.v),
     type: c[1]?.v,
-    price: c[2]?.v,
-    adjustedPrice: c[3]?.v,
-    customerType: c[4]?.v,
-    employee: c[5]?.v,
+    package: c[2]?.v,
+    price: c[3]?.v,
+    adjustedPrice: c[4]?.v,
+    customerType: c[5]?.v,
+    employee: c[6]?.v,
   }));
   return summarizeSales(records, now);
 }

@@ -52,7 +52,7 @@ export function TargetProgress({ monthSales }) {
           </button>
         )}
       </div>
-      <div style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16, padding: "16px 18px" }}>
+      <div className="targetPanel" style={{ background: "#FFFFFF", border: "1px solid #ECE9E1", borderRadius: 16 }}>
         {editing ? (
           <form onSubmit={saveTargets}>
             <div className="targetInputs">

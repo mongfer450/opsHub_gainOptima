@@ -53,6 +53,7 @@ export default function OpsHubOwnerConsole() {
   const [employeeSales, setEmployeeSales] = useState([]);
   const [showEmployeeDetail, setShowEmployeeDetail] = useState(false);
   const [todaySales, setTodaySales] = useState(EMPTY_SALES);
+  const [todayTransactions, setTodayTransactions] = useState([]);
   const [monthSales, setMonthSales] = useState(EMPTY_SALES);
   const [memberPackages, setMemberPackages] = useState(EMPTY_PACKAGES);
   const [salesLoading, setSalesLoading] = useState(true);
@@ -63,6 +64,7 @@ export default function OpsHubOwnerConsole() {
     (dashboard) => {
       setMonthSales(dashboard.monthSales);
       setTodaySales(dashboard.todaySales);
+      setTodayTransactions(dashboard.todayTransactions);
       setMemberPackages(dashboard.memberPackages);
       setEmployeeSales(dashboard.employeeSales);
       setSalesError("");
@@ -71,6 +73,7 @@ export default function OpsHubOwnerConsole() {
       setSalesError(error.message || "โหลดข้อมูลยอดขายไม่สำเร็จ");
       setMonthSales(EMPTY_SALES);
       setTodaySales(EMPTY_SALES);
+      setTodayTransactions([]);
       setMemberPackages(EMPTY_PACKAGES);
       setEmployeeSales([]);
     },
@@ -116,6 +119,7 @@ export default function OpsHubOwnerConsole() {
         monthSales={monthSales}
         monthSalesLoading={salesLoading}
         todaySales={todaySales}
+        todayTransactions={todayTransactions}
         todaySalesLoading={salesLoading}
         employeeSales={employeeSales}
         error={salesError}

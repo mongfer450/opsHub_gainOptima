@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
-import { GOLD_DARK, SHORTCUTS_WEB_APP_URL } from "../config/constants";
+import { GOLD_DARK, SHORTCUTS_SHEET_GID, SHORTCUTS_SHEET_ID, SHORTCUTS_WEB_APP_URL } from "../config/constants";
 import { saveShortcut } from "../services/shortcuts";
 import { ShortcutIcon } from "./ShortcutIcon";
 
@@ -13,6 +13,8 @@ const ICON_OPTIONS = [
   ["wallet", "ค่าใช้จ่าย"],
   ["folder", "โฟลเดอร์"],
 ];
+
+const sheetUrl = `https://docs.google.com/spreadsheets/d/${SHORTCUTS_SHEET_ID}/edit?gid=${SHORTCUTS_SHEET_GID}`;
 
 function blankShortcut(shortcuts) {
   return {
@@ -82,11 +84,18 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
           <h2 style={{ margin: 0, fontSize: 17 }}>จัดการลิงก์</h2>
           <button type="button" onClick={onClose} aria-label="ปิด" title="ปิด" style={iconButton}><X size={17} /></button>
         </div>
-        {!SHORTCUTS_WEB_APP_URL && <div role="alert" style={errorStyle}>ยังไม่เชื่อมระบบจัดการลิงก์</div>}
-        <label style={fieldStyle}>
-          รหัสผู้ดูแล
-          <input type="password" autoComplete="off" value={adminToken} onChange={(event) => setAdminToken(event.target.value)} style={inputStyle} />
-        </label>
+        {!SHORTCUTS_WEB_APP_URL && (
+          <div role="status" style={errorStyle}>
+            ยังไม่เชื่อม Apps Script Web App จึงยังบันทึกการเพิ่ม แก้ไข หรือลบจากหน้าเว็บไม่ได้
+            <a href={sheetUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: 6, color: GOLD_DARK }}>เปิดชีตทางลัด</a>
+          </div>
+        )}
+        {SHORTCUTS_WEB_APP_URL && (
+          <label style={fieldStyle}>
+            รหัสผู้ดูแล
+            <input type="password" autoComplete="off" value={adminToken} onChange={(event) => setAdminToken(event.target.value)} style={inputStyle} />
+          </label>
+        )}
         {error && <div role="alert" style={errorStyle}>{error}</div>}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "18px 0 8px" }}>
           <h3 style={{ margin: 0, fontSize: 13 }}>ลิงก์ทั้งหมด</h3>

@@ -17,6 +17,7 @@ function emptyPackages() {
 export function summarizeSales(records, now = new Date()) {
   const monthSales = emptySales();
   const todaySales = emptySales();
+  const todayTransactions = [];
   const memberPackages = emptyPackages();
   const byEmployee = new Map();
 
@@ -34,6 +35,14 @@ export function summarizeSales(records, now = new Date()) {
     if (row.date.getDate() === now.getDate()) {
       todaySales[type.toLowerCase()] += value;
       todaySales.club += value;
+      todayTransactions.push({
+        date: row.date,
+        type,
+        package: String(row.package || "").trim(),
+        customerType: String(row.customerType || "").trim(),
+        employee: String(row.employee || "").trim(),
+        amount: value,
+      });
     }
 
     const customerType = String(row.customerType || "").trim();
@@ -48,5 +57,11 @@ export function summarizeSales(records, now = new Date()) {
     }
   }
 
-  return { monthSales, todaySales, memberPackages, employeeSales: [...byEmployee.values()].sort((a, b) => b.pt - a.pt) };
+  return {
+    monthSales,
+    todaySales,
+    todayTransactions: todayTransactions.sort((a, b) => b.date - a.date),
+    memberPackages,
+    employeeSales: [...byEmployee.values()].sort((a, b) => b.pt - a.pt),
+  };
 }

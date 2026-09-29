@@ -6,13 +6,15 @@ export function GlobalStyles() {
       .tap { transition: transform 0.15s ease, box-shadow 0.15s ease; }
       .tap:active { transform: scale(0.97); }
 
-      .wrap { max-width: 1040px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+      .wrap { max-width: 1040px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
       .avatar { width: 32px; height: 32px; flex-shrink: 0; }
       .titleBrand { font-size: 10px; }
       .titleMain { font-size: 13px; }
       .sectionTitle { font-size: 14px; }
       .metricGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
       .metricGrid > :first-child { grid-column: 1 / -1; }
+      .metricCard { padding: 12px 8px; }
+      .targetPanel { padding: 12px; }
       .targetInputs { display: grid; grid-template-columns: 1fr; gap: 12px; }
       .shortcutFormGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
       .targetRow { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
@@ -22,9 +24,10 @@ export function GlobalStyles() {
       .iconCardIcon { width: 38px; height: 38px; }
 
       @media (min-width: 640px) {
-        .wrap { padding-left: 20px; padding-right: 20px; }
         .metricGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .metricGrid > :first-child { grid-column: auto; }
+        .metricCard { padding: 14px 12px; }
+        .targetPanel { padding: 16px 18px; }
         .attendanceGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .targetInputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .avatar { width: 40px; height: 40px; }
