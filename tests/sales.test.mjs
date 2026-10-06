@@ -28,3 +28,23 @@ test("no qualifying sales produces an empty detail list", () => {
   assert.equal(result.todayTransactions.length, 0);
   assert.equal(result.todaySales.pt, 0);
 });
+
+test("week sales use seven-day blocks within the current month", () => {
+  const records = [
+    { date: new Date(2026, 8, 30), type: "MB", price: 100 },
+    { date: new Date(2026, 9, 1), type: "MB", price: 200 },
+    { date: new Date(2026, 9, 7), type: "PT", price: 300 },
+    { date: new Date(2026, 9, 8), type: "MB", price: 400 },
+    { date: new Date(2026, 9, 14), type: "PT", price: 500 },
+    { date: new Date(2026, 9, 15), type: "MB", price: 600 },
+    { date: new Date(2026, 9, 28), type: "MB", price: 700 },
+    { date: new Date(2026, 9, 29), type: "PT", price: 800 },
+  ];
+
+  assert.deepEqual(summarizeSales(records, new Date(2026, 9, 7)).weekSales, { club: 500, mb: 200, pt: 300 });
+  assert.deepEqual(summarizeSales(records, new Date(2026, 9, 8)).weekSales, { club: 400, mb: 400, pt: 0 });
+  assert.deepEqual(summarizeSales(records, new Date(2026, 9, 14)).weekSales, { club: 900, mb: 400, pt: 500 });
+  assert.deepEqual(summarizeSales(records, new Date(2026, 9, 15)).weekSales, { club: 600, mb: 600, pt: 0 });
+  assert.deepEqual(summarizeSales(records, new Date(2026, 9, 28)).weekSales, { club: 700, mb: 700, pt: 0 });
+  assert.deepEqual(summarizeSales(records, new Date(2026, 9, 29)).weekSales, { club: 800, mb: 0, pt: 800 });
+});

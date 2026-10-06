@@ -1,0 +1,80 @@
+.ownerTargetsSection {
+  position: relative;
+  width: 100%;
+  margin: 0 auto 12px;
+  z-index: 11;
+}
+
+.ownerTargetSummary {
+  display: block;
+  width: 100%;
+  padding: 3px 18px;
+  border: 1px solid #ece9e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #111318;
+  text-align: left;
+  font: inherit;
+}
+
+.ownerTargetSummary .ownerTargetLabel { font-size: 18px; }
+.ownerTargetSummary .ownerTargetAmounts { font-size: 19px; }
+
+.ownerTargetFlyout {
+  position: static;
+  width: 100%;
+  padding-top: 8px;
+}
+
+.ownerTargetGroup {
+  padding: 2px 18px;
+  border: 1px solid #ece9e1;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.ownerTargetPeriodGrid { display: grid; gap: 10px; margin-top: 10px; }
+.ownerTargetRow { padding: 14px 0; }
+.ownerTargetRowHeader { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 5px 14px; }
+.ownerTargetLabel { color: #111318; font-size: 15px; font-weight: 700; }
+.ownerTargetAmounts { color: #9ca3af; font-family: "Space Grotesk", sans-serif; font-size: 16px; font-weight: 600; white-space: nowrap; }
+.ownerTargetAmounts strong { color: #7a5e12; }
+.ownerTargetGauge { display: block; height: 10px; margin-top: 9px; overflow: hidden; border-radius: 6px; background: #f0eee8; }
+.ownerTargetGauge span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7a5e12, #c9a227); }
+.ownerTargetGauge.gauge-low span { background: #dc2626; }
+.ownerTargetGauge.gauge-mid span { background: #c9a227; }
+.ownerTargetGauge.gauge-high span { background: #16884e; }
+.ownerTargetDifference { margin-top: 6px; color: #9ca3af; font-size: 12px; font-weight: 600; }
+.ownerTargetDifference.reached { color: #16884e; }
+.ownerTargetRow.statusTarget.remaining .ownerTargetAmounts strong,
+.ownerTargetRow.statusTarget.remaining .ownerTargetDifference { color: #dc2626; }
+.ownerTargetRow.statusTarget.reached .ownerTargetAmounts strong,
+.ownerTargetRow.statusTarget.reached .ownerTargetDifference { color: #16884e; }
+
+.ownerTargetToolbar { display: flex; align-items: center; justify-content: space-between; min-height: 40px; border-bottom: 1px solid #f0eee8; font-size: 13px; font-weight: 700; }
+.ownerTargetToolbar button { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: #7a5e12; cursor: pointer; }
+.ownerTargetToolbar button:hover { background: #f8f3e7; }
+.ownerTargetToolbar button:focus-visible,
+.ownerTargetActions button:focus-visible { outline: 2px solid #c9a227; outline-offset: 2px; }
+.ownerTargetEditGrid { display: grid; gap: 12px; padding-top: 14px; }
+.ownerTargetEditGrid label { display: grid; gap: 6px; font-size: 12px; font-weight: 600; }
+.ownerTargetEditGrid input { width: 100%; min-width: 0; padding: 10px 12px; border: 1px solid #d9d6ce; border-radius: 6px; color: #111318; font: inherit; }
+.ownerTargetActions { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 0; }
+.ownerTargetActions button { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; padding: 7px 12px; border: 1px solid #d9d6ce; border-radius: 6px; background: #fff; color: #111318; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.ownerTargetActions button[type="submit"] { border-color: #7a5e12; background: #7a5e12; color: #fff; }
+
+@media (min-width: 720px) {
+  .ownerTargetsSection { width: 80%; }
+  .ownerTargetMonthDetails,
+  .ownerTargetPeriodGrid,
+  .ownerTargetEditGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ownerTargetMonthDetails .ownerTargetRow:first-child { padding-right: 16px; }
+  .ownerTargetMonthDetails .ownerTargetRow + .ownerTargetRow { padding-left: 16px; border-left: 1px solid #f0eee8; }
+}
+
+@media (max-width: 719px) {
+  .ownerTargetSummary { padding: 2px 14px; }
+  .ownerTargetSummary .ownerTargetLabel { font-size: 15px; }
+  .ownerTargetSummary .ownerTargetAmounts { font-size: 15px; }
+  .ownerTargetMonthDetails .ownerTargetRow + .ownerTargetRow { border-top: 1px solid #f0eee8; }
+}

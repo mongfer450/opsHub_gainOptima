@@ -3,6 +3,7 @@ import { AttendanceSection } from "./components/AttendanceSection";
 import { GlobalStyles } from "./components/GlobalStyles";
 import { Header } from "./components/Header";
 import { MemberPackagesSection } from "./components/MemberPackagesSection";
+import { ReportFormsSection } from "./components/ReportFormsSection";
 import { SalesOverview } from "./components/SalesOverview";
 import { ShortcutSection } from "./components/ShortcutSection";
 import {
@@ -55,6 +56,7 @@ export default function OpsHubOwnerConsole() {
   const [todaySales, setTodaySales] = useState(EMPTY_SALES);
   const [todayTransactions, setTodayTransactions] = useState([]);
   const [monthSales, setMonthSales] = useState(EMPTY_SALES);
+  const [weekSales, setWeekSales] = useState(EMPTY_SALES);
   const [memberPackages, setMemberPackages] = useState(EMPTY_PACKAGES);
   const [salesLoading, setSalesLoading] = useState(true);
   const [salesError, setSalesError] = useState("");
@@ -63,6 +65,7 @@ export default function OpsHubOwnerConsole() {
     fetchSalesDashboard,
     (dashboard) => {
       setMonthSales(dashboard.monthSales);
+      setWeekSales(dashboard.weekSales);
       setTodaySales(dashboard.todaySales);
       setTodayTransactions(dashboard.todayTransactions);
       setMemberPackages(dashboard.memberPackages);
@@ -72,6 +75,7 @@ export default function OpsHubOwnerConsole() {
     (error) => {
       setSalesError(error.message || "โหลดข้อมูลยอดขายไม่สำเร็จ");
       setMonthSales(EMPTY_SALES);
+      setWeekSales(EMPTY_SALES);
       setTodaySales(EMPTY_SALES);
       setTodayTransactions([]);
       setMemberPackages(EMPTY_PACKAGES);
@@ -117,6 +121,7 @@ export default function OpsHubOwnerConsole() {
       <Header shortcuts={shortcuts} />
       <SalesOverview
         monthSales={monthSales}
+        weekSales={weekSales}
         monthSalesLoading={salesLoading}
         todaySales={todaySales}
         todayTransactions={todayTransactions}
@@ -128,6 +133,7 @@ export default function OpsHubOwnerConsole() {
       />
       {!salesError && <MemberPackagesSection memberPackages={memberPackages} loading={salesLoading} />}
       <AttendanceSection attendanceToday={attendanceToday} loading={attendanceLoading} error={attendanceError} />
+      <ReportFormsSection />
       <ShortcutSection
         shortcuts={shortcuts}
         loading={shortcutsLoading}

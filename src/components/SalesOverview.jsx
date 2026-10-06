@@ -6,6 +6,7 @@ import { TodaySalesDialog } from "./TodaySalesDialog";
 
 export function SalesOverview({
   monthSales,
+  weekSales,
   monthSalesLoading,
   todaySales,
   todayTransactions,
@@ -30,8 +31,8 @@ export function SalesOverview({
         </div>
       ) : (
         <>
+          <TargetProgress monthSales={monthSales} weekSales={weekSales} todaySales={todaySales} />
           <SalesMetricCards monthSales={monthSales} todaySales={todaySales} todaySalesLoading={todaySalesLoading} onSelect={setSelectedSalesType} />
-          <TargetProgress monthSales={monthSales} />
 
           <button
             onClick={onToggleEmployeeDetail}

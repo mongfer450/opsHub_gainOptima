@@ -16,10 +16,14 @@ function emptyPackages() {
 
 export function summarizeSales(records, now = new Date()) {
   const monthSales = emptySales();
+  const weekSales = emptySales();
   const todaySales = emptySales();
   const todayTransactions = [];
   const memberPackages = emptyPackages();
   const byEmployee = new Map();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const weekStartDay = Math.floor((now.getDate() - 1) / 7) * 7 + 1;
+  const weekStart = Date.UTC(now.getFullYear(), now.getMonth(), weekStartDay);
 
   for (const row of records) {
     const type = String(row.type || "").trim().toUpperCase();
@@ -31,6 +35,12 @@ export function summarizeSales(records, now = new Date()) {
 
     monthSales[type.toLowerCase()] += value;
     monthSales.club += value;
+
+    const saleDay = Date.UTC(row.date.getFullYear(), row.date.getMonth(), row.date.getDate());
+    if (saleDay >= weekStart && saleDay <= today) {
+      weekSales[type.toLowerCase()] += value;
+      weekSales.club += value;
+    }
 
     if (row.date.getDate() === now.getDate()) {
       todaySales[type.toLowerCase()] += value;
@@ -59,6 +69,7 @@ export function summarizeSales(records, now = new Date()) {
 
   return {
     monthSales,
+    weekSales,
     todaySales,
     todayTransactions: todayTransactions.sort((a, b) => b.date - a.date),
     memberPackages,
