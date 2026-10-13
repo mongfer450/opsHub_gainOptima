@@ -1,7 +1,8 @@
 import { LEADERBOARD_EXCLUDED_NAMES } from "../config/constants.js";
 
 export function normalizeEmployeeName(name) {
-  return String(name || "").trim().toLowerCase();
+  const normalized = String(name || "").trim().toLowerCase();
+  return normalized === "copter" ? "คอปเตอร์" : normalized;
 }
 
 export function isLeaderboardExcludedName(name) {

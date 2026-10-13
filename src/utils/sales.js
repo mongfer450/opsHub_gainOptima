@@ -14,6 +14,11 @@ function emptyPackages() {
   return { mb: {}, pt: {} };
 }
 
+export function salesSharePercent(part, total) {
+  if (!Number.isFinite(part) || !Number.isFinite(total) || total <= 0) return 0;
+  return Math.round((part / total) * 100);
+}
+
 export function summarizeSales(records, now = new Date()) {
   const monthSales = emptySales();
   const weekSales = emptySales();
