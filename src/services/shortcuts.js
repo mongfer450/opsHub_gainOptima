@@ -1,4 +1,27 @@
-import { SHORTCUTS_SHEET_GID, SHORTCUTS_SHEET_ID, SHORTCUTS_WEB_APP_URL } from "../config/constants";
+import { SHORTCUTS_SHEET_GID, SHORTCUTS_SHEET_ID, SHORTCUTS_WEB_APP_URL } from "../config/constants.js";
+
+const LOCAL_EDITS_KEY = "gainOptimaOwnerShortcutEdits:v1";
+
+function readLocalEdits() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_EDITS_KEY) || "null");
+    return {
+      upserts: Array.isArray(saved?.upserts) ? saved.upserts : [],
+      deletedIds: Array.isArray(saved?.deletedIds) ? saved.deletedIds : [],
+    };
+  } catch {
+    return { upserts: [], deletedIds: [] };
+  }
+}
+
+export function mergeShortcutEdits(items, edits) {
+  const deleted = new Set(edits.deletedIds);
+  const merged = new Map(items.filter((item) => !deleted.has(item.id)).map((item) => [item.id, item]));
+  edits.upserts.forEach((item) => {
+    if (item?.id && !deleted.has(item.id)) merged.set(item.id, item);
+  });
+  return [...merged.values()].sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+}
 
 function request(callbackParams) {
   if (!SHORTCUTS_WEB_APP_URL) {
@@ -53,13 +76,31 @@ export async function fetchShortcuts() {
     sortOrder: Number(c[6]?.v || 0),
     enabled: c[7]?.v === true || String(c[7]?.v).toLowerCase() === "true",
   }));
-  return items
+  const visible = items
     .filter((item) => item?.id && item?.label && /^https?:\/\//i.test(item.url))
     .sort((a, b) => Number(a.sortOrder) - Number(b.sortOrder));
+  return SHORTCUTS_WEB_APP_URL ? visible : mergeShortcutEdits(visible, readLocalEdits());
 }
 
-export async function saveShortcut(action, shortcut, adminToken) {
-  if (!SHORTCUTS_WEB_APP_URL) throw new Error("ยังไม่ได้ตั้งค่า Apps Script Web App URL");
+export async function saveShortcut(action, shortcut, adminToken, currentItems = []) {
+  if (!SHORTCUTS_WEB_APP_URL) {
+    const edits = readLocalEdits();
+    if (action === "upsert") {
+      edits.upserts = [...edits.upserts.filter((item) => item.id !== shortcut.id), shortcut];
+      edits.deletedIds = edits.deletedIds.filter((id) => id !== shortcut.id);
+    } else if (action === "delete") {
+      edits.upserts = edits.upserts.filter((item) => item.id !== shortcut.id);
+      edits.deletedIds = [...new Set([...edits.deletedIds, shortcut.id])];
+    } else {
+      throw new Error("คำสั่งจัดการลิงก์ไม่ถูกต้อง");
+    }
+    try {
+      localStorage.setItem(LOCAL_EDITS_KEY, JSON.stringify(edits));
+    } catch {
+      throw new Error("เบราว์เซอร์นี้บันทึกลิงก์ไม่ได้");
+    }
+    return mergeShortcutEdits(currentItems, edits);
+  }
   const requestId = crypto.randomUUID();
   const body = new URLSearchParams({
     requestId,
