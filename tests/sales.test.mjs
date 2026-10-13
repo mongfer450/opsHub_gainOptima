@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { summarizeSales } from "../src/utils/sales.js";
+import { salesSharePercent, summarizeSales } from "../src/utils/sales.js";
+
+test("MB and PT shares use monthly club sales and handle zero total", () => {
+  assert.equal(salesSharePercent(125510, 212810), 59);
+  assert.equal(salesSharePercent(87300, 212810), 41);
+  assert.equal(salesSharePercent(0, 0), 0);
+});
 
 test("today's MB/PT transactions reconcile to the cards", () => {
   const now = new Date(2026, 8, 29, 18);
