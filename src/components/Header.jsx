@@ -1,9 +1,32 @@
+import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
 import { GAIN_LOGO } from "../assets/logos";
 import { GOLD, GOLD_DARK } from "../config/constants";
+import { ReportFormsSection } from "./ReportFormsSection";
 import { ShortcutIcon } from "./ShortcutIcon";
+import { ShortcutSection } from "./ShortcutSection";
 
-export function Header({ shortcuts = [] }) {
+export function Header({ shortcuts = [], shortcutsLoading, shortcutsError, onShortcutsChanged }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const headerShortcuts = shortcuts.filter((item) => item.enabled && item.placement === "header");
+
+  useEffect(() => {
+    if (!menuOpen) return undefined;
+    function closeOnOutsideClick(event) {
+      if (!menuRef.current?.contains(event.target)) setMenuOpen(false);
+    }
+    function closeOnEscape(event) {
+      if (event.key === "Escape") setMenuOpen(false);
+    }
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
+
   return (
     <div
       style={{
@@ -40,11 +63,32 @@ export function Header({ shortcuts = [] }) {
               </div>
             </div>
           </div>
-          {headerShortcuts.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, flexShrink: 0 }}>
-              {headerShortcuts.map((item) => <HeaderLink key={item.id} shortcut={item} />)}
-            </div>
-          )}
+          <div ref={menuRef} className="ownerHeaderActions">
+            {headerShortcuts.map((item) => <HeaderLink key={item.id} shortcut={item} />)}
+            <button
+              type="button"
+              className="ownerHeaderMenuButton"
+              aria-label={menuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+              aria-expanded={menuOpen}
+              aria-controls="owner-header-menu"
+              title={menuOpen ? "ปิดเมนู" : "เปิดเมนู"}
+              onClick={() => setMenuOpen((open) => !open)}
+            >
+              {menuOpen ? <X size={19} /> : <Menu size={19} />}
+            </button>
+            {menuOpen && (
+              <nav id="owner-header-menu" className="ownerHeaderMenu" aria-label="ฟอร์มและทางลัด">
+                <ReportFormsSection onNavigate={() => setMenuOpen(false)} />
+                <ShortcutSection
+                  shortcuts={shortcuts}
+                  loading={shortcutsLoading}
+                  error={shortcutsError}
+                  onChanged={onShortcutsChanged}
+                  onNavigate={() => setMenuOpen(false)}
+                />
+              </nav>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -71,7 +115,7 @@ function HeaderLink({ shortcut }) {
       }}
     >
       <ShortcutIcon name={shortcut.icon} size={16} />
-      <span style={{ fontSize: 11, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>{shortcut.label}</span>
+      <span className="ownerHeaderShortcutLabel" style={{ fontSize: 11, fontWeight: 700, color: "#111318", whiteSpace: "nowrap" }}>{shortcut.label}</span>
     </a>
   );
 }

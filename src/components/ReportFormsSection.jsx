@@ -14,16 +14,16 @@ const forms = [
   },
 ];
 
-export function ReportFormsSection() {
+export function ReportFormsSection({ onNavigate }) {
   return (
-    <section className="wrap" style={{ marginTop: 28 }} aria-labelledby="report-forms-title">
-      <h2 id="report-forms-title" className="sectionTitle" style={{ margin: "0 0 10px", fontWeight: 700 }}>ฟอร์มกรอกแจ้ง</h2>
+    <section className="ownerHeaderMenuSection" aria-labelledby="report-forms-title">
+      <h2 id="report-forms-title" className="ownerHeaderMenuTitle">ฟอร์มกรอกแจ้ง</h2>
       <div style={{ border: "1px solid #ECE9E1", borderRadius: 8, overflow: "hidden", background: "#FFFFFF" }}>
         {forms.map(({ label, href, Icon }, index) => (
-          <a key={href} href={href} target="_blank" rel="noopener noreferrer" className="tap" style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 62, padding: "10px 14px", borderTop: index ? "1px solid #F0EEE8" : "none", textDecoration: "none", color: "#111318" }}>
-            <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, flexShrink: 0, borderRadius: 8, background: `${GOLD}1A`, color: GOLD_DARK }}><Icon size={17} aria-hidden="true" /></span>
-            <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 13 }}>{label}</span>
-            <ArrowUpRight size={16} color={GOLD_DARK} style={{ flexShrink: 0 }} aria-hidden="true" />
+          <a key={href} href={href} target="_blank" rel="noopener noreferrer" onClick={onNavigate} className="tap" style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 46, padding: "8px 10px", borderTop: index ? "1px solid #F0EEE8" : "none", textDecoration: "none", color: "#111318" }}>
+            <span style={{ display: "grid", placeItems: "center", width: 30, height: 30, flexShrink: 0, borderRadius: 6, background: `${GOLD}1A`, color: GOLD_DARK }}><Icon size={16} aria-hidden="true" /></span>
+            <span style={{ flex: 1, minWidth: 0, fontWeight: 700, fontSize: 12 }}>{label}</span>
+            <ArrowUpRight size={15} color={GOLD_DARK} style={{ flexShrink: 0 }} aria-hidden="true" />
           </a>
         ))}
       </div>

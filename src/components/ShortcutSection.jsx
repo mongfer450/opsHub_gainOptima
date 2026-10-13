@@ -3,13 +3,13 @@ import { GOLD, GOLD_DARK } from "../config/constants";
 import { ShortcutIcon } from "./ShortcutIcon";
 import { ShortcutManageButton } from "./ShortcutManageButton";
 
-export function ShortcutSection({ shortcuts, loading, error, onChanged }) {
+export function ShortcutSection({ shortcuts, loading, error, onChanged, onNavigate }) {
   const visible = shortcuts.filter((item) => item.enabled && item.placement === "list");
 
   return (
-    <section className="wrap" style={{ marginTop: 28 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <h2 className="sectionTitle" style={{ margin: 0, fontWeight: 700 }}>ทางลัด</h2>
+    <section className="ownerHeaderMenuSection">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8 }}>
+        <h2 className="ownerHeaderMenuTitle" style={{ margin: 0 }}>ทางลัด</h2>
         <ShortcutManageButton shortcuts={shortcuts} onChanged={onChanged} />
       </div>
       {loading ? (
@@ -21,13 +21,13 @@ export function ShortcutSection({ shortcuts, loading, error, onChanged }) {
       ) : (
         <div style={{ border: "1px solid #ECE9E1", borderRadius: 8, overflow: "hidden", background: "#FFFFFF" }}>
           {visible.map((item, index) => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" className="tap" style={{ display: "flex", alignItems: "center", gap: 12, minHeight: 62, padding: "10px 14px", borderTop: index ? "1px solid #F0EEE8" : "none", textDecoration: "none", color: "#111318" }}>
-              <span style={{ display: "grid", placeItems: "center", width: 34, height: 34, flexShrink: 0, borderRadius: 8, background: `${GOLD}1A` }}><ShortcutIcon name={item.icon} /></span>
+            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer" onClick={onNavigate} className="tap" style={{ display: "flex", alignItems: "center", gap: 10, minHeight: 46, padding: "8px 10px", borderTop: index ? "1px solid #F0EEE8" : "none", textDecoration: "none", color: "#111318" }}>
+              <span style={{ display: "grid", placeItems: "center", width: 30, height: 30, flexShrink: 0, borderRadius: 6, background: `${GOLD}1A` }}><ShortcutIcon name={item.icon} size={16} /></span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontWeight: 700, fontSize: 13, overflowWrap: "anywhere" }}>{item.label}</span>
-                {item.description && <span style={{ display: "block", marginTop: 2, color: "#8B919D", fontSize: 11, overflowWrap: "anywhere" }}>{item.description}</span>}
+                <span style={{ display: "block", fontWeight: 700, fontSize: 12, overflowWrap: "anywhere" }}>{item.label}</span>
+                {item.description && <span style={{ display: "block", marginTop: 1, color: "#8B919D", fontSize: 10.5, overflowWrap: "anywhere" }}>{item.description}</span>}
               </span>
-              <ArrowUpRight size={16} color={GOLD_DARK} style={{ flexShrink: 0 }} aria-hidden="true" />
+              <ArrowUpRight size={15} color={GOLD_DARK} style={{ flexShrink: 0 }} aria-hidden="true" />
             </a>
           ))}
         </div>

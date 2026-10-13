@@ -22,6 +22,17 @@ export function GlobalStyles() {
       .attendanceChip { display: flex; align-items: baseline; justify-content: center; gap: 5px; background: #FFFFFF; border: 1px solid #ECE9E1; border-radius: 10px; padding: 8px 6px; min-width: 0; }
       .iconCard { padding: 14px 8px 12px; }
       .iconCardIcon { width: 38px; height: 38px; }
+      .ownerHeaderActions { position: relative; display: flex; align-items: center; gap: 8px; min-width: 0; flex-shrink: 0; }
+      .ownerHeaderMenuButton { display: grid; place-items: center; width: 36px; height: 36px; flex-shrink: 0; border: 1px solid rgba(255,255,255,.35); border-radius: 8px; background: rgba(255,255,255,.12); color: #fff; cursor: pointer; }
+      .ownerHeaderMenuButton:hover { background: rgba(255,255,255,.2); }
+      .ownerHeaderMenuButton:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      .ownerHeaderMenu { position: absolute; top: calc(100% + 14px); right: 0; width: min(360px, calc(100vw - 32px)); max-height: calc(100dvh - 80px); overflow-y: auto; padding: 12px; border: 1px solid #ece9e1; border-radius: 8px; background: #fff; box-shadow: 0 14px 36px rgba(0,0,0,.18); color: #111318; }
+      .ownerHeaderMenuSection + .ownerHeaderMenuSection { margin-top: 14px; padding-top: 14px; border-top: 1px solid #f0eee8; }
+      .ownerHeaderMenuTitle { margin: 0 0 8px; font-size: 12px; font-weight: 700; }
+
+      @media (max-width: 420px) {
+        .ownerHeaderShortcutLabel { display: none; }
+      }
 
       @media (min-width: 640px) {
         .metricGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }

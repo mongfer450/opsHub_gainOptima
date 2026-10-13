@@ -37,7 +37,7 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
 
   async function submit(event) {
     event.preventDefault();
-    if (!adminToken.trim()) {
+    if (SHORTCUTS_WEB_APP_URL && !adminToken.trim()) {
       setError("กรุณาใส่รหัสผู้ดูแล");
       return;
     }
@@ -48,7 +48,7 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
     setSaving(true);
     setError("");
     try {
-      const items = await saveShortcut("upsert", draft, adminToken);
+      const items = await saveShortcut("upsert", draft, adminToken, shortcuts);
       onSaved(items);
       setDraft(null);
     } catch (cause) {
@@ -59,7 +59,7 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
   }
 
   async function remove(item) {
-    if (!adminToken.trim()) {
+    if (SHORTCUTS_WEB_APP_URL && !adminToken.trim()) {
       setError("กรุณาใส่รหัสผู้ดูแล");
       return;
     }
@@ -67,7 +67,7 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
     setSaving(true);
     setError("");
     try {
-      const items = await saveShortcut("delete", { id: item.id }, adminToken);
+      const items = await saveShortcut("delete", { id: item.id }, adminToken, shortcuts);
       onSaved(items);
       if (draft?.id === item.id) setDraft(null);
     } catch (cause) {
@@ -85,8 +85,8 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
           <button type="button" onClick={onClose} aria-label="ปิด" title="ปิด" style={iconButton}><X size={17} /></button>
         </div>
         {!SHORTCUTS_WEB_APP_URL && (
-          <div role="status" style={errorStyle}>
-            ยังไม่เชื่อม Apps Script Web App จึงยังบันทึกการเพิ่ม แก้ไข หรือลบจากหน้าเว็บไม่ได้
+          <div role="status" style={{ ...errorStyle, color: "#7A5E12", background: "#FFF8E6", borderColor: "#E8D9A9" }}>
+            การแก้ไขจะบันทึกเฉพาะเบราว์เซอร์นี้ ไม่เปลี่ยนชีตหรือเครื่องอื่น
             <a href={sheetUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block", marginTop: 6, color: GOLD_DARK }}>เปิดชีตทางลัด</a>
           </div>
         )}
@@ -99,7 +99,7 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
         {error && <div role="alert" style={errorStyle}>{error}</div>}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "18px 0 8px" }}>
           <h3 style={{ margin: 0, fontSize: 13 }}>ลิงก์ทั้งหมด</h3>
-          <button type="button" onClick={() => { setDraft(blankShortcut(shortcuts)); setError(""); }} disabled={!SHORTCUTS_WEB_APP_URL || saving} style={commandButton}><Plus size={15} /> เพิ่มลิงก์</button>
+          <button type="button" onClick={() => { setDraft(blankShortcut(shortcuts)); setError(""); }} disabled={saving} style={commandButton}><Plus size={15} /> เพิ่มลิงก์</button>
         </div>
         <div style={{ borderTop: "1px solid #ECE9E1" }}>
           {shortcuts.map((item) => (
@@ -109,8 +109,8 @@ export function ShortcutEditor({ shortcuts, onClose, onSaved }) {
                 <div style={{ fontSize: 12.5, fontWeight: 700, overflowWrap: "anywhere" }}>{item.label}</div>
                 <div style={{ fontSize: 10.5, color: "#8B919D" }}>{item.placement === "header" ? "ส่วนหัว" : "รายการ"}{item.enabled ? "" : " · ซ่อน"}</div>
               </div>
-              <button type="button" onClick={() => { setDraft({ ...item }); setError(""); }} disabled={!SHORTCUTS_WEB_APP_URL || saving} aria-label={`แก้ไข ${item.label}`} title="แก้ไข" style={iconButton}><Pencil size={15} /></button>
-              <button type="button" onClick={() => remove(item)} disabled={!SHORTCUTS_WEB_APP_URL || saving} aria-label={`ลบ ${item.label}`} title="ลบ" style={{ ...iconButton, color: "#B42318" }}><Trash2 size={15} /></button>
+              <button type="button" onClick={() => { setDraft({ ...item }); setError(""); }} disabled={saving} aria-label={`แก้ไข ${item.label}`} title="แก้ไข" style={iconButton}><Pencil size={15} /></button>
+              <button type="button" onClick={() => remove(item)} disabled={saving} aria-label={`ลบ ${item.label}`} title="ลบ" style={{ ...iconButton, color: "#B42318" }}><Trash2 size={15} /></button>
             </div>
           ))}
         </div>
