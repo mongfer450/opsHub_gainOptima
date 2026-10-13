@@ -22,7 +22,7 @@ npm run dev
 
 - ข้อมูลอยู่ใน [Gain Optima Ops Hub Shortcuts](https://docs.google.com/spreadsheets/d/1vFQAZLiQtGnEgiacK3zE48qNyrFD70Y16Kb3639Lt4g/edit?gid=1236504074) แท็บ `Shortcuts`
 - หน้าเว็บอ่านชีตทุก 60 วินาทีผ่าน Google Visualization API จึงต้องแชร์ชีตเป็น “ทุกคนที่มีลิงก์: ผู้ดู”
-- ทุกลิงก์เปิดแท็บใหม่ ไม่มีหมวดและไม่มีการเก็บลิงก์ใน localStorage
+- ทุกลิงก์เปิดแท็บใหม่ ไม่มีหมวด; เมื่อยังไม่เชื่อม Apps Script การเพิ่ม/แก้ไข/ลบจากหน้าเว็บจะบันทึกเฉพาะเบราว์เซอร์นั้นใน localStorage และไม่เปลี่ยนชีต
 - `Placement` เป็น `header` (ข้าง Owner Console) หรือ `list`; `Enabled` ควบคุมการแสดงผล
 
 ### เปิดการแก้ไขลิงก์บนเว็บ
@@ -34,7 +34,7 @@ npm run dev
 5. สำหรับพรีวิวในเครื่อง ใส่ URL ที่ลงท้าย `/exec` ในไฟล์ `.env.local` เป็น `VITE_SHORTCUTS_WEB_APP_URL=<URL>` แล้วเริ่ม dev server หรือ build ใหม่
 6. สำหรับ GitHub Pages ตั้ง Actions variable ชื่อ `SHORTCUTS_WEB_APP_URL` เป็น URL เดียวกัน แล้วรัน workflow deploy ใหม่
 
-ก่อนเชื่อม Web App ปุ่มจัดการลิงก์จะเปิดชีตให้เจ้าของแก้ไขโดยตรง หลังเชื่อมแล้วจะแก้ไขในหน้าเว็บด้วยรหัสผู้ดูแล ซึ่งไม่ถูกบันทึกใน localStorage
+ก่อนเชื่อม Web App สามารถทดลองจัดการลิงก์ในเบราว์เซอร์ได้ โดยการเปลี่ยนแปลงไม่ซิงก์ไปยังชีตหรือเครื่องอื่น หลังเชื่อมแล้วจะแก้ไขในหน้าเว็บด้วยรหัสผู้ดูแล ซึ่งไม่ถูกบันทึกใน localStorage
 
 ## การเข้างาน
 
