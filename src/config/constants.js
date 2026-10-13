@@ -13,11 +13,12 @@ export const CLUB_TARGET = 1500000;
 export const PT_TARGET = 750000;
 
 export const EMPLOYEE_TARGETS = [
+  { name: "แก้ม", target: 80000 },
   { name: "ปราย", target: 150000 },
   { name: "เมล", target: 150000 },
   { name: "เพชร", target: 80000 },
   { name: "ดีม", target: 80000 },
-  { name: "Copter", target: 80000 },
+  { name: "คอปเตอร์", target: 80000 },
 ];
 
 export const LEADERBOARD_EXCLUDED_NAMES = ["Gain Optima"];
