@@ -3,9 +3,7 @@ import { AttendanceSection } from "./components/AttendanceSection";
 import { GlobalStyles } from "./components/GlobalStyles";
 import { Header } from "./components/Header";
 import { MemberPackagesSection } from "./components/MemberPackagesSection";
-import { ReportFormsSection } from "./components/ReportFormsSection";
 import { SalesOverview } from "./components/SalesOverview";
-import { ShortcutSection } from "./components/ShortcutSection";
 import {
   fetchSalesDashboard,
   fetchTodayAttendance,
@@ -118,7 +116,15 @@ export default function OpsHubOwnerConsole() {
       }}
     >
       <GlobalStyles />
-      <Header shortcuts={shortcuts} />
+      <Header
+        shortcuts={shortcuts}
+        shortcutsLoading={shortcutsLoading}
+        shortcutsError={shortcutsError}
+        onShortcutsChanged={(items) => {
+          setShortcuts(items);
+          setShortcutsError("");
+        }}
+      />
       <SalesOverview
         monthSales={monthSales}
         weekSales={weekSales}
@@ -133,16 +139,6 @@ export default function OpsHubOwnerConsole() {
       />
       {!salesError && <MemberPackagesSection memberPackages={memberPackages} loading={salesLoading} />}
       <AttendanceSection attendanceToday={attendanceToday} loading={attendanceLoading} error={attendanceError} />
-      <ReportFormsSection />
-      <ShortcutSection
-        shortcuts={shortcuts}
-        loading={shortcutsLoading}
-        error={shortcutsError}
-        onChanged={(items) => {
-          setShortcuts(items);
-          setShortcutsError("");
-        }}
-      />
     </div>
   );
 }
